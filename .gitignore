@@ -8,3 +8,6 @@ config.json
 ticker_config.json
 
 mail.*
+
+.github
+.devcontainer

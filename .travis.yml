@@ -20,7 +20,5 @@ before_script:
 script:
   - make test
   - make lint
-notifications:
-  email:
-    - phihag@phihag.de
-
+#notifications:
+#  email:

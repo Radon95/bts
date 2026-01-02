@@ -11,7 +11,7 @@ const extract_zip = require('extract-zip');
 const request = require('request');
 const rimraf = require('rimraf');
 
-const ZIP_URL = 'https://aufschlagwechsel.de/bup.zip';
+const ZIP_URL = 'https://raw.githubusercontent.com/Radon95/bup/master/dist/bup.zip';
 
 function safe_rimraf(path, cb) {
 	assert(path.includes('bup'));

@@ -1,14 +1,14 @@
 bts - Badminton Tournament Software
 ==========
 
-Use [bup](https://github.com/phihag/bup/) at tournaments.
+Use [bup](https://github.com/radon95/bup/) at tournaments.
 
 ## Docker installation
 
 [Install docker](https://docs.docker.com/install/) and run
 
 ```
-docker run -p 4000:4000 phihag/bts
+docker run -p 4000:4000 radon95/bts
 ```
 
 ## Manual installation
