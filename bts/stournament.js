@@ -15,19 +15,19 @@ function get_courts(db, tournament_key, callback) {
 	});
 }
 
+function get_matches(db, tournament_key, callback) {
+	db.matches.find({tournament_key}, function(err, matches) {
+		if (err) return callback(err);
+		return callback(err, matches);
+	});
+}
+
 function get_umpires(db, tournament_key, callback) {
 	db.umpires.find({tournament_key}, function(err, umpires) {
 		if (err) return callback(err);
 
 		umpires.sort(utils.cmp_key('name'));
 		return callback(err, umpires);
-	});
-}
-
-function get_matches(db, tournament_key, callback) {
-	db.matches.find({tournament_key}, function(err, matches) {
-		if (err) return callback(err);
-		return callback(err, matches);
 	});
 }
 
