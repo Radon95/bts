@@ -100,10 +100,14 @@ function create_app(config, db) {
 	app.use(favicon(utils.root_dir() + '/static/icons/favicon.ico'));
 	app.use('/d(:courtnum)?', shortcuts.display_handler);
 	app.use('/u(:courtnum)?', shortcuts.umpire_handler);
+	app.get('/u_select/:tournament_key', function(req, res) {
+		res.sendFile(path.join(utils.root_dir(), 'static', 'u_select.html'));
+	});
 
 	app.use(body_parser.json());
 	app.get('/h/:tournament_key/courts', http_api.courts_handler);
 	app.get('/h/:tournament_key/matches', http_api.matches_handler);
+	app.get('/h/:tournament_key/umpires', http_api.umpires_handler);
 	app.post('/h/:tournament_key/m/:match_id/score', http_api.score_handler);
 	app.get('/h/:tournament_key/m/:match_id/info', http_api.matchinfo_handler);
 	app.get('/h/:tournament_key/logo/:logo_id', http_api.logo_handler);

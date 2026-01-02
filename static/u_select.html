@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Select Umpire</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/css/admin.css" />
+</head>
+<body>
+    <div class="main">
+        <h1>Select Umpire</h1>
+        <div id="umpire-buttons"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tournament_key = window.location.pathname.split('/')[2];
+            const umpireButtons = document.getElementById('umpire-buttons');
+
+            fetch('/h/' + tournament_key + '/umpires')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        data.umpires.forEach(umpire => {
+                            const button = document.createElement('a');
+                            button.href = '/bup/#t=' + encodeURIComponent(tournament_key) + '&umpire=' + encodeURIComponent(umpire.name);
+                            button.className = 'button';
+                            button.textContent = umpire.name;
+                            umpireButtons.appendChild(button);
+                        });
+                    } else {
+                        umpireButtons.textContent = 'Error: ' + data.message;
+                    }
+                })
+                .catch(error => {
+                    umpireButtons.textContent = 'Error fetching umpires: ' + error;
+                });
+        });
+    </script>
+</body>
+</html>

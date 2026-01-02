@@ -358,10 +358,26 @@ function logo_handler(req, res) {
 	res.sendFile(fn);
 }
 
+function umpires_handler(req, res) {
+	const tournament_key = req.params.tournament_key;
+	stournament.get_umpires(req.app.db, tournament_key, function(err, umpires) {
+		const reply = (err ? {
+			status: 'error',
+			message: err.message,
+		} : {
+			status: 'ok',
+			umpires,
+		});
+
+		res.json(reply);
+	});
+}
+
 module.exports = {
 	courts_handler,
 	logo_handler,
 	matches_handler,
 	matchinfo_handler,
 	score_handler,
+	umpires_handler,
 };
