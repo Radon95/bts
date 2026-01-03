@@ -98,11 +98,11 @@ function create_app(config, db) {
 		res.redirect('/admin/');
 	});
 	app.use(favicon(utils.root_dir() + '/static/icons/favicon.ico'));
-	app.use('/d(:courtnum)?', shortcuts.display_handler);
-	app.use('/u(:courtnum)?', shortcuts.umpire_handler);
 	app.get('/u_select/:tournament_key', function(req, res) {
 		res.sendFile(path.join(utils.root_dir(), 'static', 'u_select.html'));
 	});
+	app.use('/d(:courtnum)?', shortcuts.display_handler);
+	app.use('/u(:courtnum)?', shortcuts.umpire_handler);
 
 	app.use(body_parser.json());
 	app.get('/h/:tournament_key/courts', http_api.courts_handler);
