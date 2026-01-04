@@ -3,13 +3,15 @@ It can connect to the third-party software "Badminton Tournament Planner" where 
 It then shows the respective matches on the respective bup website and receives the (intermediate) results and if the "Badminton Tournament Planner" is connected puts them in there.
 
 To setup the project run the following:
-make
-make dev
-make run
+
+    make
+    make dev
+    make run
 
 The setup above pulls the current bup version on the initial setup.
 To pull the newest version later run:
-make bupdate
-make install-bup-dev
+
+    make bupdate
+    make install-bup-dev
 
 If there are changes in bup needed tell me which changes and I can do them in the bup repository.
