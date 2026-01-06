@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Umpire Selection</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" type="text/css" href="/static/css/bup.css">
+	<style>
+	.umpire-buttons {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+	.umpire-buttons > .button {
+		flex: 1 1 250px;
+		margin: 2px;
+		font-size: 1.2em;
+	}
+	</style>
+</head>
+<body>
+	<div class="bup-container">
+		<h1>Select Umpire</h1>
+		<div class="umpire-buttons">
+			{{umpire-list}}
+		</div>
+	</div>
+</body>
+</html>

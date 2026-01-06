@@ -66,7 +66,18 @@ function umpire_handler(req, res) {
 	});
 }
 
+function u_select_handler(req, res) {
+	req.app.db.tournaments.findOne({}, (err, t) => {
+		if (err) return _error(res, err);
+		if (!t) return serve_404(res);
+
+		const redir_url = '/u_select/' + t.key;
+		res.redirect(redir_url);
+	});
+}
+
 module.exports = {
 	display_handler,
 	umpire_handler,
+	u_select_handler,
 };

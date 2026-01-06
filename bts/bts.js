@@ -51,6 +51,7 @@ function main() {
 		},
 		function (config, db, cb) {
 			const app = create_app(config, db);
+			setup_server(app);
 
 			btp_manager.init(app, (err) => cb(err, app));
 		}, function(app, cb) {
@@ -82,13 +83,10 @@ function cadmin_router() {
 }
 
 function create_app(config, db) {
-	const server = require('http').createServer();
 	const app = express();
-	const wss = new ws_module.Server({server: server});
 
 	app.config = config;
 	app.db = db;
-	app.wss = wss;
 
 	app.use('/bup/', express.static(config.bup_location, {index: config.bup_index}));
 	app.use('/bupdev/', express.static(path.join(utils.root_dir(), 'static/bup/dev/')));
@@ -99,6 +97,8 @@ function create_app(config, db) {
 	});
 	app.use(favicon(utils.root_dir() + '/static/icons/favicon.ico'));
 	app.use('/d(:courtnum)?', shortcuts.display_handler);
+	app.get('/u_select/:tournament_key', http_api.umpire_select_handler);
+	app.get('/u_select', shortcuts.u_select_handler);
 	app.use('/u(:courtnum)?', shortcuts.umpire_handler);
 
 	app.use(body_parser.json());
@@ -107,6 +107,14 @@ function create_app(config, db) {
 	app.post('/h/:tournament_key/m/:match_id/score', http_api.score_handler);
 	app.get('/h/:tournament_key/m/:match_id/info', http_api.matchinfo_handler);
 	app.get('/h/:tournament_key/logo/:logo_id', http_api.logo_handler);
+
+	return app;
+}
+
+function setup_server(app) {
+	const server = require('http').createServer();
+	const wss = new ws_module.Server({server: server});
+	app.wss = wss;
 
 	wss.on('connection', function connection(ws, req) {
 		const location = url.parse(req.url, true);
@@ -124,10 +132,15 @@ function create_app(config, db) {
 	});
 
 	server.on('request', app);
-	server.listen(config.port, function () {
+	server.listen(app.config.port, function () {
 		// console.log('Listening on ' + server.address().port);
 	});
-	return app;
 }
 
-main();
+if (require.main === module) {
+	main();
+}
+
+module.exports = {
+	create_app,
+};

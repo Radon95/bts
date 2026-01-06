@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const async = require('async');
+const fs = require('fs');
 const path = require('path');
 
 const admin = require('./admin');
@@ -358,10 +359,51 @@ function logo_handler(req, res) {
 	res.sendFile(fn);
 }
 
+function encode_params(obj) {
+	return Object.entries(obj).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+}
+
+function umpire_select_handler(req, res) {
+	const tournament_key = req.params.tournament_key;
+
+	stournament.get_umpires(req.app.db, tournament_key, (err, umpires) => {
+		if (err) {
+			serror.silent('umpire_select_handler failed: ' + err.message, err);
+			return res.status(500).send('Internal server error');
+		}
+
+		fs.readFile(path.join(utils.root_dir(), 'static', 'u_select.html'), 'utf8', (err, html) => {
+			if (err) {
+				serror.silent('umpire_select_handler failed (readfile): ' + err.message, err);
+				return res.status(500).send('Internal server error');
+			}
+
+			const umpire_buttons_html = umpires.map(umpire => {
+				const bup_params = {
+					btsh_e: tournament_key,
+					umpire_id: umpire._id,
+					court_selection_type: 'umpire',
+				};
+				const BUP_URL = '/bup/#' + encode_params(bup_params);
+				return `<a class="button" href="${BUP_URL}">${umpire.name}</a>`;
+			}).join('');
+
+			html = html.replace('{{umpire-list}}', umpire_buttons_html);
+
+			res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+			res.setHeader('Pragma', 'no-cache');
+			res.setHeader('Expires', '0');
+			res.send(html);
+		});
+	});
+}
+
+
 module.exports = {
 	courts_handler,
 	logo_handler,
 	matches_handler,
 	matchinfo_handler,
 	score_handler,
+	umpire_select_handler,
 };
