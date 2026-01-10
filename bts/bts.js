@@ -8,6 +8,7 @@ const url = require('url');
 
 const async = require('async');
 const body_parser = require('body-parser');
+const cookie_parser = require('cookie-parser');
 const ws_module = require('ws');
 const express = require('express');
 const favicon = require('serve-favicon');
@@ -88,6 +89,7 @@ function create_app(config, db) {
 	app.config = config;
 	app.db = db;
 
+	app.use(cookie_parser());
 	app.use('/bup/', express.static(config.bup_location, {index: config.bup_index}));
 	app.use('/bupdev/', express.static(path.join(utils.root_dir(), 'static/bup/dev/')));
 	app.use('/static/', express.static('static/', {}));
@@ -99,6 +101,7 @@ function create_app(config, db) {
 	app.use('/d(:courtnum)?', shortcuts.display_handler);
 	app.get('/u_select/:tournament_key', http_api.umpire_select_handler);
 	app.get('/u_select', shortcuts.u_select_handler);
+	app.get('/set_umpire/:tournament_key/:umpire_id', shortcuts.bup_set_umpire_handler);
 	app.use('/u(:courtnum)?', shortcuts.umpire_handler);
 
 	app.use(body_parser.json());

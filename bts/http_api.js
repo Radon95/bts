@@ -379,13 +379,8 @@ function umpire_select_handler(req, res) {
 			}
 
 			const umpire_buttons_html = umpires.map(umpire => {
-				const bup_params = {
-					btsh_e: tournament_key,
-					umpire_id: umpire._id,
-					court_selection_type: 'umpire',
-				};
-				const BUP_URL = '/bup/#' + encode_params(bup_params);
-				return `<a class="button" href="${BUP_URL}">${umpire.name}</a>`;
+				const umpire_url = `/set_umpire/${tournament_key}/${umpire._id}`;
+				return `<a class="button" href="${umpire_url}">${umpire.name}</a>`;
 			}).join('');
 
 			html = html.replace('{{umpire-list}}', umpire_buttons_html);

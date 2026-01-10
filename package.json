@@ -9,6 +9,7 @@
 		"argparse": "^1.0.10",
 		"async": "*",
 		"body-parser": "*",
+		"cookie-parser": "^1.4.7",
 		"express": "*",
 		"extract-zip": "*",
 		"nedb": "*",

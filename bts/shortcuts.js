@@ -76,8 +76,35 @@ function u_select_handler(req, res) {
 	});
 }
 
+function bup_set_umpire_handler(req, res) {
+	const {tournament_key, umpire_id} = req.params;
+
+	const settings = {
+		court_selection_type: 'umpire',
+		umpire_id: umpire_id,
+	};
+	res.cookie('bup_settings', JSON.stringify(settings), {
+		path: '/bup/',
+	});
+
+	req.app.db.tournaments.findOne({key: tournament_key}, (err, t) => {
+		if (err) return _error(res, err);
+
+		const bup_params = {
+			btsh_e: tournament_key,
+		};
+		if (t && t.language && t.language !== 'auto') {
+			bup_params.lang = t.language;
+		}
+
+		const redir_url = '/bup/#' + encode_params(bup_params);
+		res.redirect(redir_url);
+	});
+}
+
 module.exports = {
 	display_handler,
 	umpire_handler,
 	u_select_handler,
+	bup_set_umpire_handler,
 };

@@ -54,10 +54,32 @@ describe('HTTP tests', function() {
 					});
 					res.on('end', () => {
 						assert(body.includes('<h1>Select Umpire</h1>'));
-						assert(body.includes('<a class="button" href="/bup/#btsh_e=test-tournament&umpire_id=umpire1&court_selection_type=umpire">Umpire 1</a>'));
+						assert(body.includes('<a class="button" href="/set_umpire/test-tournament/umpire1">Umpire 1</a>'));
 						done();
 					});
 				});
+			});
+		});
+	});
+
+	it('should set umpire cookie and redirect', function(done) {
+		db.tournaments.insert({_id: 'test-tournament', key: 'test-tournament'}, (err) => {
+			assert.ifError(err);
+
+			http.get({
+				hostname: 'localhost',
+				port: server.address().port,
+				path: '/set_umpire/test-tournament/umpire1',
+			}, (res) => {
+				assert.strictEqual(res.statusCode, 302);
+				const settings = {
+					court_selection_type: 'umpire',
+					umpire_id: 'umpire1',
+				};
+				const expected_cookie = `bup_settings=${encodeURIComponent(JSON.stringify(settings))}; Path=/bup/`;
+				assert.strictEqual(res.headers['set-cookie'][0], expected_cookie);
+				assert.strictEqual(res.headers.location, '/bup/#btsh_e=test-tournament');
+				done();
 			});
 		});
 	});
