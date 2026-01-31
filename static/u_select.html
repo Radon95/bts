@@ -28,10 +28,12 @@
 	<script>
 	function on_umpire_click(el) {
 		const umpire_id = el.getAttribute('data-umpire-id');
+		const umpire_name = el.getAttribute('data-umpire-name');
 		try {
 			const settings_json = localStorage.getItem('bup_settings');
 			const settings = settings_json ? JSON.parse(settings_json) : {};
 			settings.umpire_id = umpire_id;
+			settings.umpire_name = umpire_name;
 			settings.court_selection_type = 'umpire';
 			localStorage.setItem('bup_settings', JSON.stringify(settings));
 		} catch (e) {
