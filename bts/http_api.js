@@ -385,7 +385,7 @@ function umpire_select_handler(req, res) {
 					court_selection_type: 'umpire',
 				};
 				const BUP_URL = '/bup/#' + encode_params(bup_params);
-				return `<a class="button" href="${BUP_URL}">${umpire.name}</a>`;
+				return `<a class="button" href="${BUP_URL}" data-umpire-id="${umpire._id}" onclick="return on_umpire_click(this)">${umpire.name}</a>`;
 			}).join('');
 
 			html = html.replace('{{umpire-list}}', umpire_buttons_html);
