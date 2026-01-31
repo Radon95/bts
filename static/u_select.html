@@ -25,5 +25,20 @@
 			{{umpire-list}}
 		</div>
 	</div>
+	<script>
+	function on_umpire_click(el) {
+		const umpire_id = el.getAttribute('data-umpire-id');
+		try {
+			const settings_json = localStorage.getItem('bup_settings');
+			const settings = settings_json ? JSON.parse(settings_json) : {};
+			settings.umpire_id = umpire_id;
+			settings.court_selection_type = 'umpire';
+			localStorage.setItem('bup_settings', JSON.stringify(settings));
+		} catch (e) {
+			// Ignore
+		}
+		return true;
+	}
+	</script>
 </body>
 </html>

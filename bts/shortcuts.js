@@ -38,6 +38,7 @@ function display_handler(req, res) {
 		}
 		if (/^[0-9]+$/.test(req.params.courtnum)) {
 			bup_params.court = t.key + '_' + req.params.courtnum;
+			bup_params.court_selection_type = 'court';
 		}
 
 		const redir_url = '/bup/#' + encode_params({...bup_params, ...req.query});
@@ -59,6 +60,7 @@ function umpire_handler(req, res) {
 		}
 		if (/^[0-9]+$/.test(req.params.courtnum)) {
 			bup_params.court = t.key + '_' + req.params.courtnum;
+			bup_params.court_selection_type = 'court';
 		}
 
 		const redir_url = '/bup/#' + encode_params({...bup_params, ...req.query});
