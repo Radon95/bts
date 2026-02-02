@@ -40,6 +40,21 @@ function courts_handler(req, res) {
 	});
 }
 
+function umpires_handler(req, res) {
+	const tournament_key = req.params.tournament_key;
+	stournament.get_umpires(req.app.db, tournament_key, function(err, umpires) {
+		const reply = (err ? {
+			status: 'error',
+			message: err.message,
+		} : {
+			status: 'ok',
+			umpires,
+		});
+
+		res.json(reply);
+	});
+}
+
 function create_match_representation(tournament, match) {
 	const setup = match.setup;
 	setup.match_id = 'bts_' + match._id;
@@ -107,6 +122,8 @@ function matches_handler(req, res) {
 	const show_still = now - 60000;
 	const query = {
 		tournament_key,
+	};
+	const status_q = {
 		$or: [
 			{
 				$and: [
@@ -129,23 +146,58 @@ function matches_handler(req, res) {
 			},
 		],
 	};
-	if (req.query.court) {
-		query['setup.court_id'] = req.query.court;
-	} else {
-		query['setup.court_id'] = {$exists: true};
-	}
 
-	req.app.db.fetch_all([{
-		queryFunc: '_findOne',
-		collection: 'tournaments',
-		query: {key: tournament_key},
-	}, {
-		collection: 'matches',
-		query,
-	}, {
-		collection: 'courts',
-		query: {tournament_key},
-	}], function(err, tournament, db_matches, db_courts) {
+	async.waterfall([
+		cb => {
+			if (req.query.umpire) {
+				req.app.db.umpires.findOne({_id: req.query.umpire}, (err, umpire) => {
+					if (err) return cb(err);
+
+					const umpire_q = umpire ? {
+						$or: [
+							{'setup.umpire_id': req.query.umpire},
+							{'setup.umpire_name': umpire.name},
+						],
+					} : {
+						$or: [
+							{'setup.umpire_id': req.query.umpire},
+							{'setup.umpire_name': req.query.umpire},
+						],
+					};
+
+					query['$and'] = [status_q, umpire_q];
+					cb();
+				});
+				return;
+			}
+
+			const filters = [status_q];
+			if (req.query.court) {
+				filters.push({'setup.court_id': req.query.court});
+			}
+
+			if (filters.length > 1) {
+				query['$and'] = filters;
+			} else {
+				query['setup.court_id'] = {$exists: true};
+				query['$or'] = status_q['$or'];
+			}
+			cb();
+		},
+		cb => {
+			req.app.db.fetch_all([{
+				queryFunc: '_findOne',
+				collection: 'tournaments',
+				query: {key: tournament_key},
+			}, {
+				collection: 'matches',
+				query,
+			}, {
+				collection: 'courts',
+				query: {tournament_key},
+			}], (err, tournament, db_matches, db_courts) => cb(err, tournament, db_matches, db_courts));
+		},
+	], function(err, tournament, db_matches, db_courts) {
 		if (err) {
 			res.json({
 				status: 'error',
@@ -407,4 +459,5 @@ module.exports = {
 	matchinfo_handler,
 	score_handler,
 	umpire_select_handler,
+	umpires_handler,
 };

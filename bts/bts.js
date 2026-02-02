@@ -103,6 +103,7 @@ function create_app(config, db) {
 
 	app.use(body_parser.json());
 	app.get('/h/:tournament_key/courts', http_api.courts_handler);
+	app.get('/h/:tournament_key/umpires', http_api.umpires_handler);
 	app.get('/h/:tournament_key/matches', http_api.matches_handler);
 	app.post('/h/:tournament_key/m/:match_id/score', http_api.score_handler);
 	app.get('/h/:tournament_key/m/:match_id/info', http_api.matchinfo_handler);
