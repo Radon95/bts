@@ -149,11 +149,6 @@ function matches_handler(req, res) {
 
 	async.waterfall([
 		cb => {
-			if (req.query.court) {
-				query['setup.court_id'] = req.query.court;
-				query['$or'] = status_q['$or'];
-				return cb();
-			}
 			if (req.query.umpire) {
 				req.app.db.umpires.findOne({_id: req.query.umpire}, (err, umpire) => {
 					if (err) return cb(err);
@@ -176,8 +171,17 @@ function matches_handler(req, res) {
 				return;
 			}
 
-			query['setup.court_id'] = {$exists: true};
-			query['$or'] = status_q['$or'];
+			const filters = [status_q];
+			if (req.query.court) {
+				filters.push({'setup.court_id': req.query.court});
+			}
+
+			if (filters.length > 1) {
+				query['$and'] = filters;
+			} else {
+				query['setup.court_id'] = {$exists: true};
+				query['$or'] = status_q['$or'];
+			}
 			cb();
 		},
 		cb => {
