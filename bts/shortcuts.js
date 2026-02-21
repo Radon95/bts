@@ -38,6 +38,7 @@ function display_handler(req, res) {
 		}
 		if (/^[0-9]+$/.test(req.params.courtnum)) {
 			bup_params.court = t.key + '_' + req.params.courtnum;
+			bup_params.court_selection_type = 'court';
 		}
 
 		const redir_url = '/bup/#' + encode_params({...bup_params, ...req.query});
@@ -59,6 +60,7 @@ function umpire_handler(req, res) {
 		}
 		if (/^[0-9]+$/.test(req.params.courtnum)) {
 			bup_params.court = t.key + '_' + req.params.courtnum;
+			bup_params.court_selection_type = 'court';
 		}
 
 		const redir_url = '/bup/#' + encode_params({...bup_params, ...req.query});
@@ -66,7 +68,18 @@ function umpire_handler(req, res) {
 	});
 }
 
+function u_select_handler(req, res) {
+	req.app.db.tournaments.findOne({}, (err, t) => {
+		if (err) return _error(res, err);
+		if (!t) return serve_404(res);
+
+		const redir_url = '/u_select/' + t.key;
+		res.redirect(redir_url);
+	});
+}
+
 module.exports = {
 	display_handler,
 	umpire_handler,
+	u_select_handler,
 };

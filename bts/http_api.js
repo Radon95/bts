@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const async = require('async');
+const fs = require('fs');
 const path = require('path');
 
 const admin = require('./admin');
@@ -33,6 +34,21 @@ function courts_handler(req, res) {
 		} : {
 			status: 'ok',
 			courts,
+		});
+
+		res.json(reply);
+	});
+}
+
+function umpires_handler(req, res) {
+	const tournament_key = req.params.tournament_key;
+	stournament.get_umpires(req.app.db, tournament_key, function(err, umpires) {
+		const reply = (err ? {
+			status: 'error',
+			message: err.message,
+		} : {
+			status: 'ok',
+			umpires,
 		});
 
 		res.json(reply);
@@ -106,6 +122,8 @@ function matches_handler(req, res) {
 	const show_still = now - 60000;
 	const query = {
 		tournament_key,
+	};
+	const status_q = {
 		$or: [
 			{
 				$and: [
@@ -128,23 +146,58 @@ function matches_handler(req, res) {
 			},
 		],
 	};
-	if (req.query.court) {
-		query['setup.court_id'] = req.query.court;
-	} else {
-		query['setup.court_id'] = {$exists: true};
-	}
 
-	req.app.db.fetch_all([{
-		queryFunc: '_findOne',
-		collection: 'tournaments',
-		query: {key: tournament_key},
-	}, {
-		collection: 'matches',
-		query,
-	}, {
-		collection: 'courts',
-		query: {tournament_key},
-	}], function(err, tournament, db_matches, db_courts) {
+	async.waterfall([
+		cb => {
+			if (req.query.umpire) {
+				req.app.db.umpires.findOne({_id: req.query.umpire}, (err, umpire) => {
+					if (err) return cb(err);
+
+					const umpire_q = umpire ? {
+						$or: [
+							{'setup.umpire_id': req.query.umpire},
+							{'setup.umpire_name': umpire.name},
+						],
+					} : {
+						$or: [
+							{'setup.umpire_id': req.query.umpire},
+							{'setup.umpire_name': req.query.umpire},
+						],
+					};
+
+					query['$and'] = [status_q, umpire_q];
+					cb();
+				});
+				return;
+			}
+
+			const filters = [status_q];
+			if (req.query.court) {
+				filters.push({'setup.court_id': req.query.court});
+			}
+
+			if (filters.length > 1) {
+				query['$and'] = filters;
+			} else {
+				query['setup.court_id'] = {$exists: true};
+				query['$or'] = status_q['$or'];
+			}
+			cb();
+		},
+		cb => {
+			req.app.db.fetch_all([{
+				queryFunc: '_findOne',
+				collection: 'tournaments',
+				query: {key: tournament_key},
+			}, {
+				collection: 'matches',
+				query,
+			}, {
+				collection: 'courts',
+				query: {tournament_key},
+			}], (err, tournament, db_matches, db_courts) => cb(err, tournament, db_matches, db_courts));
+		},
+	], function(err, tournament, db_matches, db_courts) {
 		if (err) {
 			res.json({
 				status: 'error',
@@ -358,10 +411,53 @@ function logo_handler(req, res) {
 	res.sendFile(fn);
 }
 
+function encode_params(obj) {
+	return Object.entries(obj).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+}
+
+function umpire_select_handler(req, res) {
+	const tournament_key = req.params.tournament_key;
+
+	stournament.get_umpires(req.app.db, tournament_key, (err, umpires) => {
+		if (err) {
+			serror.silent('umpire_select_handler failed: ' + err.message, err);
+			return res.status(500).send('Internal server error');
+		}
+
+		fs.readFile(path.join(utils.root_dir(), 'static', 'u_select.html'), 'utf8', (err, html) => {
+			if (err) {
+				serror.silent('umpire_select_handler failed (readfile): ' + err.message, err);
+				return res.status(500).send('Internal server error');
+			}
+
+			const umpire_buttons_html = umpires.map(umpire => {
+				const bup_params = {
+					btsh_e: tournament_key,
+					umpire_id: umpire._id,
+					umpire_name: umpire.name,
+					court_selection_type: 'umpire',
+				};
+				const BUP_URL = '/bup/#' + encode_params(bup_params);
+				return `<a class="button" href="${BUP_URL}" data-umpire-id="${umpire._id}" data-umpire-name="${umpire.name}" onclick="return on_umpire_click(this)">${umpire.name}</a>`;
+			}).join('');
+
+			html = html.replace('{{umpire-list}}', umpire_buttons_html);
+
+			res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+			res.setHeader('Pragma', 'no-cache');
+			res.setHeader('Expires', '0');
+			res.send(html);
+		});
+	});
+}
+
+
 module.exports = {
 	courts_handler,
 	logo_handler,
 	matches_handler,
 	matchinfo_handler,
 	score_handler,
+	umpire_select_handler,
+	umpires_handler,
 };

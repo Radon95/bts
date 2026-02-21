@@ -71,11 +71,13 @@ function craft_match(tkey, btp_id, court_map, event, draw, officials, bm, match_
 		const o = officials.get(bm.Official1ID[0]);
 		assert(o);
 		setup.umpire_name = o.FirstName + ' ' + o.Name;
+		setup.umpire_id = tkey + '_btp_' + bm.Official1ID[0];
 	}
 	if (bm.Official2ID) {
 		const o = officials.get(bm.Official2ID[0]);
 		assert(o);
 		setup.service_judge_name = o.FirstName + ' ' + o.Name;
+		setup.service_judge_id = tkey + '_btp_' + bm.Official2ID[0];
 	}
 
 	const btp_match_ids = [{
