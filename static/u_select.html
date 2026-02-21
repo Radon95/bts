@@ -4,17 +4,47 @@
 	<meta charset="utf-8" />
 	<title>Umpire Selection</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" type="text/css" href="/static/css/bup.css">
 	<style>
+	body {
+		font-family: sans-serif;
+		background: #000;
+		color: #eee;
+		margin: 0;
+		padding: 0;
+	}
+	.bup-container {
+		text-align: center;
+		padding: 2vh 2vw;
+	}
+	h1 {
+		margin-top: 0;
+		font-size: 5vh;
+	}
 	.umpire-buttons {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
 	}
-	.umpire-buttons > .button {
+	.umpire_button {
 		flex: 1 1 250px;
-		margin: 2px;
-		font-size: 1.2em;
+		margin: 1vh 1vw;
+		padding: 3vh 2vw;
+		font-size: 4vh;
+		background: #eee;
+		border: 1px solid #ccc;
+		border-radius: 1vh;
+		cursor: pointer;
+		color: #000;
+		min-width: 250px;
+		white-space: pre-wrap;
+		text-decoration: none;
+		display: inline-block;
+	}
+	.umpire_button:hover {
+		background: #ddd;
+	}
+	.umpire_button:active {
+		background: #bbb;
 	}
 	</style>
 </head>
