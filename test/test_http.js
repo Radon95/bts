@@ -56,7 +56,7 @@ describe('HTTP tests', function() {
 						});
 						res.on('end', () => {
 							assert(body.includes('<h1>Select Umpire</h1>'));
-							assert(body.includes('<a class="button" href="/bup/#btsh_e=test-tournament&umpire_id=umpire1&umpire_name=Umpire%201&court_selection_type=umpire&court=test-court" data-umpire-id="umpire1" data-umpire-name="Umpire 1" data-court-id="test-court" onclick="return on_umpire_click(this)">Umpire 1</a>'));
+							assert(body.includes('<a class="umpire_button" href="/bup/#btsh_e=test-tournament&umpire_id=umpire1&umpire_name=Umpire%201&court_selection_type=umpire&court=test-court" data-umpire-id="umpire1" data-umpire-name="Umpire 1" data-court-id="test-court" onclick="on_umpire_click(this)">Umpire 1</a>'));
 							done();
 						});
 					});
