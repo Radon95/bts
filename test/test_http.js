@@ -41,21 +41,24 @@ describe('HTTP tests', function() {
 			assert.ifError(err);
 			db.umpires.insert({_id: 'umpire1', name: 'Umpire 1', tournament_key: 'test-tournament'}, (err) => {
 				assert.ifError(err);
+				db.courts.insert({_id: 'test-court', num: 1, tournament_key: 'test-tournament'}, (err) => {
+					assert.ifError(err);
 
-				http.get({
-					hostname: 'localhost',
-					port: server.address().port,
-					path: '/u_select/test-tournament',
-				}, (res) => {
-					assert.strictEqual(res.statusCode, 200);
-					let body = '';
-					res.on('data', (chunk) => {
-						body += chunk;
-					});
-					res.on('end', () => {
-						assert(body.includes('<h1>Select Umpire</h1>'));
-						assert(body.includes('<a class="button" href="/bup/#btsh_e=test-tournament&umpire_id=umpire1&umpire_name=Umpire%201&court_selection_type=umpire" data-umpire-id="umpire1" data-umpire-name="Umpire 1" onclick="return on_umpire_click(this)">Umpire 1</a>'));
-						done();
+					http.get({
+						hostname: 'localhost',
+						port: server.address().port,
+						path: '/u_select/test-tournament',
+					}, (res) => {
+						assert.strictEqual(res.statusCode, 200);
+						let body = '';
+						res.on('data', (chunk) => {
+							body += chunk;
+						});
+						res.on('end', () => {
+							assert(body.includes('<h1>Select Umpire</h1>'));
+							assert(body.includes('<a class="button" href="/bup/#btsh_e=test-tournament&umpire_id=umpire1&umpire_name=Umpire%201&court_selection_type=umpire&court=test-court" data-umpire-id="umpire1" data-umpire-name="Umpire 1" data-court-id="test-court" onclick="return on_umpire_click(this)">Umpire 1</a>'));
+							done();
+						});
 					});
 				});
 			});

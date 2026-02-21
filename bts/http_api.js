@@ -424,29 +424,43 @@ function umpire_select_handler(req, res) {
 			return res.status(500).send('Internal server error');
 		}
 
-		fs.readFile(path.join(utils.root_dir(), 'static', 'u_select.html'), 'utf8', (err, html) => {
+		stournament.get_courts(req.app.db, tournament_key, (err, courts) => {
 			if (err) {
-				serror.silent('umpire_select_handler failed (readfile): ' + err.message, err);
+				serror.silent('umpire_select_handler (courts) failed: ' + err.message, err);
 				return res.status(500).send('Internal server error');
 			}
 
-			const umpire_buttons_html = umpires.map(umpire => {
-				const bup_params = {
-					btsh_e: tournament_key,
-					umpire_id: umpire._id,
-					umpire_name: umpire.name,
-					court_selection_type: 'umpire',
-				};
-				const BUP_URL = '/bup/#' + encode_params(bup_params);
-				return `<a class="button" href="${BUP_URL}" data-umpire-id="${umpire._id}" data-umpire-name="${umpire.name}" onclick="return on_umpire_click(this)">${umpire.name}</a>`;
-			}).join('');
+			const first_court_id = (courts.length > 0) ? courts[0]._id : undefined;
 
-			html = html.replace('{{umpire-list}}', umpire_buttons_html);
+			fs.readFile(path.join(utils.root_dir(), 'static', 'u_select.html'), 'utf8', (err, html) => {
+				if (err) {
+					serror.silent('umpire_select_handler failed (readfile): ' + err.message, err);
+					return res.status(500).send('Internal server error');
+				}
 
-			res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-			res.setHeader('Pragma', 'no-cache');
-			res.setHeader('Expires', '0');
-			res.send(html);
+				const umpire_buttons_html = umpires.map(umpire => {
+					const bup_params = {
+						btsh_e: tournament_key,
+						umpire_id: umpire._id,
+						umpire_name: umpire.name,
+						court_selection_type: 'umpire',
+					};
+					if (first_court_id) {
+						bup_params.court = first_court_id;
+					}
+
+					const BUP_URL = '/bup/#' + encode_params(bup_params);
+					const court_attr = first_court_id ? ` data-court-id="${first_court_id}"` : '';
+					return `<a class="button" href="${BUP_URL}" data-umpire-id="${umpire._id}" data-umpire-name="${umpire.name}"${court_attr} onclick="return on_umpire_click(this)">${umpire.name}</a>`;
+				}).join('');
+
+				html = html.replace('{{umpire-list}}', umpire_buttons_html);
+
+				res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+				res.setHeader('Pragma', 'no-cache');
+				res.setHeader('Expires', '0');
+				res.send(html);
+			});
 		});
 	});
 }
