@@ -275,8 +275,10 @@ function _make_setup(d) {
 		scheduled_time_str: d.scheduled_time_str,
 		scheduled_date: d.scheduled_date,
 		event_name: d.event_name,
-		umpire_name: d.umpire_name,
-		service_judge_name: d.service_judge_name,
+		umpire_id: d.umpire_id,
+		umpire_name: (curt.umpires.find(u => u._id === d.umpire_id) || {name: ''}).name,
+		service_judge_id: d.service_judge_id,
+		service_judge_name: (curt.umpires.find(u => u._id === d.service_judge_id) || {name: ''}).name,
 		override_colors,
 		teams,
 		is_doubles,
@@ -829,10 +831,10 @@ function render_edit(form, match) {
 	// Umpire
 	uiu.el(tos_container, 'span', 'match_label', ci18n('Umpire:'));
 	const umpire_select = uiu.el(tos_container, 'select', {
-		name: 'umpire_name',
+		name: 'umpire_id',
 		size: 1,
 	});
-	render_umpire_options(umpire_select, setup.umpire_name);
+	render_umpire_options(umpire_select, setup.umpire_id || setup.umpire_name);
 
 	// Service judge
 	uiu.el(tos_container, 'span', {
@@ -840,10 +842,10 @@ function render_edit(form, match) {
 		'style': 'margin-left: 1em;',
 	}, ci18n('Service judge:'));
 	const service_judge_select = uiu.el(tos_container, 'select', {
-		name: 'service_judge_name',
+		name: 'service_judge_id',
 		size: 1,
 	});
-	render_umpire_options(service_judge_select, setup.service_judge_name, true);
+	render_umpire_options(service_judge_select, setup.service_judge_id || setup.service_judge_name, true);
 
 	render_override_colors(edit_match_container, setup);
 }
@@ -916,9 +918,9 @@ function render_umpire_options(select, curval, is_service_judge) {
 	}, is_service_judge ? ci18n('No service judge') : ci18n('No umpire'));
 	for (const u of curt.umpires) {
 		const attrs = {
-			value: u.name,
+			value: u._id,
 		};
-		if (u.name === curval) {
+		if (u._id === curval || u.name === curval) {
 			attrs.selected = 'selected';
 		}
 		uiu.el(select, 'option', attrs, u.name);

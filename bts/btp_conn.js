@@ -172,11 +172,6 @@ class BTPConn {
 				}
 
 				for (const m of matches) {
-					if (typeof m.team1_won !== 'boolean') {
-						// serror.silent('match ' + m._id + ' has needsync but is not finished');
-						continue;
-					}
-
 					this.update_score(m);
 				}
 			}
@@ -212,27 +207,39 @@ class BTPConn {
 
 		async.waterfall([
 			(cb) => {
-				if (!match.setup || !match.setup.umpire_name) {
+				if (!match.setup || (!match.setup.umpire_name && !match.setup.umpire_id)) {
 					return cb(null, null, null);
 				}
 
-				this.app.db.umpires.findOne({
-					name: match.setup.umpire_name,
+				const u_query = {
 					tournament_key: this.tkey,
-				}, (err, umpire) => {
+				};
+				if (match.setup.umpire_id) {
+					u_query._id = match.setup.umpire_id;
+				} else {
+					u_query.name = match.setup.umpire_name;
+				}
+
+				this.app.db.umpires.findOne(u_query, (err, umpire) => {
 					if (err) {
 						return cb(err);
 					}
 
 					const umpire_btp_id = umpire ? umpire.btp_id : null;
-					if (!match.setup.service_judge_name) {
+					if (!match.setup.service_judge_name && !match.setup.service_judge_id) {
 						return cb(null, umpire_btp_id, null);
 					}
 
-					this.app.db.umpires.findOne({
-						name: match.setup.service_judge_name,
+					const sj_query = {
 						tournament_key: this.tkey,
-					}, (err, service_judge) => {
+					};
+					if (match.setup.service_judge_id) {
+						sj_query._id = match.setup.service_judge_id;
+					} else {
+						sj_query.name = match.setup.service_judge_name;
+					}
+
+					this.app.db.umpires.findOne(sj_query, (err, service_judge) => {
 						if (err) {
 							return cb(err);
 						}

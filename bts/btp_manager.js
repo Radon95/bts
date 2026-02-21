@@ -51,10 +51,6 @@ function update_score(app, match) {
 		return;
 	}
 
-	if (typeof match.team1_won !== 'boolean') {
-		return; // Match not finished yet
-	}
-
 	conn.update_score(match);
 }
 
