@@ -95,21 +95,21 @@ function update_request(match, key_unicode, password, umpire_btp_id, service_jud
 		if (typeof match.team1_won === 'boolean') {
 			m.Winner = match.team1_won ? 1 : 2;
 			m.ScoreStatus = 0; // Won normally (TODO: correctly handle resignations etc.)
-		}
 
-		if (match.network_score) {
-			m.Sets = match.network_score.map(ns => {
-				return {
-					Set: {
-						T1: ns[0],
-						T2: ns[1],
-					},
-				};
-			});
-		}
+			if (match.network_score) {
+				m.Sets = match.network_score.map(ns => {
+					return {
+						Set: {
+							T1: ns[0],
+							T2: ns[1],
+						},
+					};
+				});
+			}
 
-		if (match.duration_ms) {
-			m.Duration = Math.floor(match.duration_ms / 60000);
+			if (match.duration_ms) {
+				m.Duration = Math.floor(match.duration_ms / 60000);
+			}
 		}
 
 		if (umpire_btp_id) {
