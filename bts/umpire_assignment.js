@@ -13,72 +13,58 @@ function get_today_6am() {
 	return today_6am.getTime();
 }
 
-function calculate_umpire_stats(app, tournament_key, callback) {
-	const db = app.db;
+function _calculate_stats(umpires, matches) {
 	const today_6am = get_today_6am();
+	const umpires_by_id = new Map();
+	const umpires_by_name = new Map();
 
-	async.parallel({
-		umpires: cb => db.umpires.find({tournament_key}, cb),
-		matches: cb => db.matches.find({tournament_key}, cb),
-	}, (err, results) => {
-		if (err) return callback(err);
+	for (const u of umpires) {
+		u.total_matches_all = 0;
+		u.total_matches_today = 0;
+		u.last_match_end_ts = 0;
+		u.last_role = null;
+		u.on_court_match_id = null;
+		u.on_court_court_id = null;
+		u.on_court_match_score = null;
+		u.on_court_match_start_ts = null;
+		umpires_by_id.set(u._id, u);
+		umpires_by_name.set(u.name, u);
+	}
 
-		const {umpires, matches} = results;
-		const umpires_by_id = new Map();
-		const umpires_by_name = new Map();
+	for (const m of matches) {
+		const u_id = m.setup.umpire_id;
+		const u_name = m.setup.umpire_name;
+		const sj_id = m.setup.service_judge_id;
+		const sj_name = m.setup.service_judge_name;
 
-		for (const u of umpires) {
-			u.total_matches_all = 0;
-			u.total_matches_today = 0;
-			u.last_match_end_ts = 0;
-			u.last_role = null;
-			u.on_court_match_id = null;
-			umpires_by_id.set(u._id, u);
-			umpires_by_name.set(u.name, u);
-		}
+		const process_umpire = (id, name, role) => {
+			const u = umpires_by_id.get(id) || umpires_by_name.get(name);
+			if (!u) return;
 
-		for (const m of matches) {
-			const u_id = m.setup.umpire_id;
-			const u_name = m.setup.umpire_name;
-			const sj_id = m.setup.service_judge_id;
-			const sj_name = m.setup.service_judge_name;
-
-			const process_umpire = (id, name, role) => {
-				const u = umpires_by_id.get(id) || umpires_by_name.get(name);
-				if (!u) return;
-
-				if (m.end_ts) {
-					u.total_matches_all++;
-					if (m.end_ts >= today_6am) {
-						u.total_matches_today++;
-					}
-					if (m.end_ts > u.last_match_end_ts) {
-						u.last_match_end_ts = m.end_ts;
-						u.last_role = role;
-					}
-				} else if (m.setup.court_id && m.setup.now_on_court) {
-					u.on_court_match_id = m._id;
+			if (m.end_ts) {
+				u.total_matches_all++;
+				if (m.end_ts >= today_6am) {
+					u.total_matches_today++;
 				}
-			};
+				if (m.end_ts > u.last_match_end_ts) {
+					u.last_match_end_ts = m.end_ts;
+					u.last_role = role;
+				}
+			} else if (m.setup.court_id && m.setup.now_on_court) {
+				u.on_court_match_id = m._id;
+				u.on_court_court_id = m.setup.court_id;
+				u.on_court_match_score = m.network_score;
+				if (m.presses && m.presses.length > 0) {
+					u.on_court_match_start_ts = m.presses[0].timestamp;
+				}
+			}
+		};
 
-			process_umpire(u_id, u_name, 'umpire');
-			process_umpire(sj_id, sj_name, 'service_judge');
-		}
-
-		async.each(umpires, (u, cb) => {
-			const update = {
-				total_matches_all: u.total_matches_all,
-				total_matches_today: u.total_matches_today,
-				last_match_end_ts: u.last_match_end_ts,
-				last_role: u.last_role,
-			};
-			db.umpires.update({_id: u._id}, {$set: update}, {}, cb);
-		}, (err) => {
-			if (err) return callback(err);
-			if (callback) callback(null, umpires);
-		});
-	});
+		process_umpire(u_id, u_name, 'umpire');
+		process_umpire(sj_id, sj_name, 'service_judge');
+	}
 }
+
 
 function get_priority(u, now) {
 	const weight = (u.weight !== undefined) ? u.weight : 1.0;
@@ -105,20 +91,8 @@ function reassign(app, tournament_key, callback) {
 
 			const {umpires, matches} = results;
 			const now = Date.now();
-			const today_6am = get_today_6am();
 
-			// Update in-memory counts and stats
-			const umpires_by_id = new Map();
-			const umpires_by_name = new Map();
-			for (const u of umpires) {
-				u.total_matches_all = 0;
-				u.total_matches_today = 0;
-				u.last_match_end_ts = 0;
-				u.last_role = null;
-				u.on_court_match_id = null;
-				umpires_by_id.set(u._id, u);
-				umpires_by_name.set(u.name, u);
-			}
+			_calculate_stats(umpires, matches);
 
 			const unassigned_umpire_matches = [];
 			const unassigned_sj_matches = [];
@@ -127,27 +101,6 @@ function reassign(app, tournament_key, callback) {
 				const u_name = m.setup.umpire_name;
 				const sj_id = m.setup.service_judge_id;
 				const sj_name = m.setup.service_judge_name;
-
-				const process_umpire = (id, name, role) => {
-					const u = umpires_by_id.get(id) || umpires_by_name.get(name);
-					if (!u) return;
-
-					if (m.end_ts) {
-						u.total_matches_all++;
-						if (m.end_ts >= today_6am) {
-							u.total_matches_today++;
-						}
-						if (m.end_ts > u.last_match_end_ts) {
-							u.last_match_end_ts = m.end_ts;
-							u.last_role = role;
-						}
-					} else if (m.setup.court_id && m.setup.now_on_court) {
-						u.on_court_match_id = m._id;
-					}
-				};
-
-				process_umpire(u_id, u_name, 'umpire');
-				process_umpire(sj_id, sj_name, 'service_judge');
 
 				if (!m.end_ts && m.setup.court_id && m.setup.now_on_court) {
 					if (!u_id && !u_name) {
@@ -228,7 +181,7 @@ function reassign(app, tournament_key, callback) {
 
 			async.eachSeries(assignments, (asgn, cb) => {
 				const {match, umpire, role} = asgn;
-				const setup = utils.deep_copy(match.setup);
+				const setup = JSON.parse(JSON.stringify(match.setup));
 				if (role === 'umpire') {
 					setup.umpire_name = umpire.name;
 					setup.umpire_id = umpire._id;
@@ -252,7 +205,6 @@ function reassign(app, tournament_key, callback) {
 function get_umpires_with_stats(app, tournament_key, callback) {
 	const db = app.db;
 	const now = Date.now();
-	const today_6am = get_today_6am();
 
 	async.parallel({
 		umpires: cb => db.umpires.find({tournament_key}, cb),
@@ -261,52 +213,8 @@ function get_umpires_with_stats(app, tournament_key, callback) {
 	}, (err, results) => {
 		if (err) return callback(err);
 
-		const {umpires, matches, tournament} = results;
-		const umpires_by_id = new Map();
-		const umpires_by_name = new Map();
-
-		for (const u of umpires) {
-			u.total_matches_all = 0;
-			u.total_matches_today = 0;
-			u.last_match_end_ts = 0;
-			u.last_role = null;
-			u.on_court_match_id = null;
-			umpires_by_id.set(u._id, u);
-			umpires_by_name.set(u.name, u);
-		}
-
-		for (const m of matches) {
-			const u_id = m.setup.umpire_id;
-			const u_name = m.setup.umpire_name;
-			const sj_id = m.setup.service_judge_id;
-			const sj_name = m.setup.service_judge_name;
-
-			const process_umpire = (id, name, role) => {
-				const u = umpires_by_id.get(id) || umpires_by_name.get(name);
-				if (!u) return;
-
-				if (m.end_ts) {
-					u.total_matches_all++;
-					if (m.end_ts >= today_6am) {
-						u.total_matches_today++;
-					}
-					if (m.end_ts > u.last_match_end_ts) {
-						u.last_match_end_ts = m.end_ts;
-						u.last_role = role;
-					}
-				} else if (m.setup.court_id && m.setup.now_on_court) {
-					u.on_court_match_id = m._id;
-					u.on_court_court_id = m.setup.court_id;
-					u.on_court_match_score = m.network_score;
-					if (m.presses && m.presses.length > 0) {
-						u.on_court_match_start_ts = m.presses[0].timestamp;
-					}
-				}
-			};
-
-			process_umpire(u_id, u_name, 'umpire');
-			process_umpire(sj_id, sj_name, 'service_judge');
-		}
+		const {umpires, matches} = results;
+		_calculate_stats(umpires, matches);
 
 		for (const u of umpires) {
 			if (u.on_court_match_id) {
@@ -324,7 +232,6 @@ function get_umpires_with_stats(app, tournament_key, callback) {
 }
 
 module.exports = {
-	calculate_umpire_stats,
 	get_umpires_with_stats,
 	reassign,
 };

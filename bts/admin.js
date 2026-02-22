@@ -252,10 +252,18 @@ function handle_umpire_recalculate(app, ws, msg) {
 		return;
 	}
 
-	umpire_assignment.calculate_umpire_stats(app, msg.tournament_key, (err) => {
+	umpire_assignment.get_umpires_with_stats(app, msg.tournament_key, (err, umpires) => {
 		if (err) return ws.respond(msg, err);
 
-		umpire_assignment.get_umpires_with_stats(app, msg.tournament_key, (err, umpires) => {
+		async.each(umpires, (u, cb) => {
+			const update = {
+				total_matches_all: u.total_matches_all,
+				total_matches_today: u.total_matches_today,
+				last_match_end_ts: u.last_match_end_ts,
+				last_role: u.last_role,
+			};
+			app.db.umpires.update({_id: u._id}, {$set: update}, {}, cb);
+		}, (err) => {
 			if (!err) {
 				notify_change(app, msg.tournament_key, 'umpires_changed', {all_umpires: umpires});
 			}

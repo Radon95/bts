@@ -22,65 +22,8 @@ function ui_show() {
 
 	const top_controls = uiu.el(main, 'div', 'umpire_manage_controls');
 
-	const tracking_label = uiu.el(top_controls, 'label');
-	const tracking_cb = uiu.el(tracking_label, 'input', {
-		type: 'checkbox',
-		checked: (curt.umpire_tracking_enabled ? 'checked' : undefined),
-	});
-	uiu.el(tracking_label, 'span', {}, ci18n('umpire_manage:tracking_enabled'));
-	tracking_cb.addEventListener('change', () => {
-		send({
-			type: 'tournament_edit_props',
-			key: curt.key,
-			props: {
-				umpire_tracking_enabled: tracking_cb.checked,
-			},
-		}, (err) => {
-			if (err) return cerror.net(err);
-			curt.umpire_tracking_enabled = tracking_cb.checked;
-			ui_render();
-		});
-	});
-
-	const assignment_label = uiu.el(top_controls, 'label');
-	const assignment_cb = uiu.el(assignment_label, 'input', {
-		type: 'checkbox',
-		checked: (curt.umpire_assignment_enabled ? 'checked' : undefined),
-	});
-	uiu.el(assignment_label, 'span', {}, ci18n('umpire_manage:assignment_enabled'));
-	assignment_cb.addEventListener('change', () => {
-		send({
-			type: 'tournament_edit_props',
-			key: curt.key,
-			props: {
-				umpire_assignment_enabled: assignment_cb.checked,
-			},
-		}, (err) => {
-			if (err) return cerror.net(err);
-			curt.umpire_assignment_enabled = assignment_cb.checked;
-			ui_render();
-		});
-	});
-
-	const sj_label = uiu.el(top_controls, 'label');
-	const sj_cb = uiu.el(sj_label, 'input', {
-		type: 'checkbox',
-		checked: (curt.service_judge_assignment_enabled ? 'checked' : undefined),
-	});
-	uiu.el(sj_label, 'span', {}, ci18n('umpire_manage:sj_assignment_enabled'));
-	sj_cb.addEventListener('change', () => {
-		send({
-			type: 'tournament_edit_props',
-			key: curt.key,
-			props: {
-				service_judge_assignment_enabled: sj_cb.checked,
-			},
-		}, (err) => {
-			if (err) return cerror.net(err);
-			curt.service_judge_assignment_enabled = sj_cb.checked;
-			ui_render();
-		});
-	});
+	const options_btn = uiu.el(top_controls, 'button', {}, ci18n('umpire_manage:options'));
+	options_btn.addEventListener('click', ui_options);
 
 	const recalc_btn = uiu.el(top_controls, 'button', {}, ci18n('umpire_manage:recalculate'));
 	recalc_btn.addEventListener('click', () => {
@@ -95,6 +38,79 @@ function ui_show() {
 
 	uiu.el(main, 'div', 'umpire_manage_container');
 	ui_render();
+}
+
+function ui_options() {
+	const body = uiu.qs('body');
+	const dlg_bg = uiu.el(body, 'div', 'dialog_bg');
+	const dlg = uiu.el(dlg_bg, 'div', 'dialog');
+
+	function close() {
+		cbts_utils.esc_stack_pop();
+		uiu.remove(dlg_bg);
+	}
+	cbts_utils.esc_stack_push(close);
+
+	uiu.el(dlg, 'h2', {}, ci18n('umpire_manage:options'));
+
+	const tracking_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const tracking_cb = uiu.el(tracking_label, 'input', {
+		type: 'checkbox',
+	});
+	if (curt.umpire_tracking_enabled) tracking_cb.checked = true;
+	uiu.el(tracking_label, 'span', {}, ' ' + ci18n('umpire_manage:tracking_enabled'));
+
+	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const assignment_cb = uiu.el(assignment_label, 'input', {
+		type: 'checkbox',
+	});
+	if (curt.umpire_assignment_enabled) assignment_cb.checked = true;
+	uiu.el(assignment_label, 'span', {}, ' ' + ci18n('umpire_manage:assignment_enabled'));
+
+	const sj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const sj_cb = uiu.el(sj_label, 'input', {
+		type: 'checkbox',
+	});
+	if (curt.service_judge_assignment_enabled) sj_cb.checked = true;
+	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled'));
+
+	function update_disabled() {
+		if (!tracking_cb.checked) {
+			assignment_cb.disabled = true;
+			sj_cb.disabled = true;
+		} else {
+			assignment_cb.disabled = false;
+			sj_cb.disabled = !assignment_cb.checked;
+		}
+	}
+	update_disabled();
+
+	tracking_cb.addEventListener('change', update_disabled);
+	assignment_cb.addEventListener('change', update_disabled);
+
+	const btn_row = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: right;'});
+	const cancel_btn = uiu.el(btn_row, 'button', {style: 'margin-right: 10px;'}, ci18n('Cancel'));
+	cancel_btn.addEventListener('click', close);
+
+	const ok_btn = uiu.el(btn_row, 'button', {}, ci18n('Change'));
+	ok_btn.addEventListener('click', () => {
+		const props = {
+			umpire_tracking_enabled: tracking_cb.checked,
+			umpire_assignment_enabled: (tracking_cb.checked && assignment_cb.checked),
+			service_judge_assignment_enabled: (tracking_cb.checked && assignment_cb.checked && sj_cb.checked),
+		};
+
+		send({
+			type: 'tournament_edit_props',
+			key: curt.key,
+			props: props,
+		}, (err) => {
+			if (err) return cerror.net(err);
+			Object.assign(curt, props);
+			close();
+			ui_render();
+		});
+	});
 }
 
 function ui_render() {
@@ -129,7 +145,8 @@ function ui_render() {
 			}
 
 			const title_span = uiu.el(header, 'span', 'umpire_group_title');
-			uiu.text(title_span, `${status.label} (${group_umpires.length})`);
+			const prefix = status.collapsible ? (localStorage.getItem(`umpire_manage_collapsed_${status.id}`) === 'true' ? '▶ ' : '▼ ') : '';
+			uiu.text(title_span, `${prefix}${status.label} (${group_umpires.length})`);
 
 			const list = uiu.el(group, 'div', 'umpire_list');
 			list.dataset.status = status.id;
@@ -144,6 +161,7 @@ function ui_render() {
 					const currently_collapsed = localStorage.getItem(`umpire_manage_collapsed_${status.id}`) === 'true';
 					list.style.display = currently_collapsed ? 'block' : 'none';
 					localStorage.setItem(`umpire_manage_collapsed_${status.id}`, !currently_collapsed);
+					uiu.text(title_span, (currently_collapsed ? '▼ ' : '▶ ') + `${status.label} (${group_umpires.length})`);
 				});
 
 				group.addEventListener('mouseenter', () => {
@@ -183,7 +201,8 @@ function ui_render() {
 			});
 
 			group_umpires.forEach(u => {
-				const tile = uiu.el(list, 'div', 'umpire_tile', {
+				const tile = uiu.el(list, 'div', {
+					'class': 'umpire_tile',
 					draggable: (u.calculated_status !== 'oncourt' ? 'true' : 'false'),
 				});
 				tile.dataset.umpireId = u._id;
@@ -235,12 +254,17 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:paused_for', {minutes: pause_duration}));
 				}
 
-				const hover_info = uiu.el(tile, 'div', 'umpire_tile_hover', {style: 'display:none'});
-				uiu.el(hover_info, 'div', {}, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
-				uiu.el(hover_info, 'div', {}, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
+				const hover_info = uiu.el(tile, 'div', {
+					'class': 'umpire_tile_hover',
+					style: 'display:none',
+				});
+				const total_div = uiu.el(hover_info, 'div');
+				uiu.text(total_div, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
+				const today_div = uiu.el(hover_info, 'div');
+				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
 
-				tile.addEventListener('mouseenter', () => hover_info.style.display = 'block');
-				tile.addEventListener('mouseleave', () => hover_info.style.display = 'none');
+				tile.addEventListener('mouseenter', () => uiu.show(hover_info));
+				tile.addEventListener('mouseleave', () => uiu.hide(hover_info));
 			});
 		});
 	});

@@ -98,6 +98,7 @@ var ci18n_de = {
 'umpires:last_on_court': 'letztes Spiel endete {time}',
 
 'umpire_manage:title': 'Schiedsrichter-Verwaltung',
+'umpire_manage:options': 'Optionen',
 'umpire_manage:tracking_enabled': 'Automatische Schiedsrichter-Verfolgung',
 'umpire_manage:assignment_enabled': 'Automatische Spiel-Zuweisung',
 'umpire_manage:sj_assignment_enabled': 'Aufschlagrichter-Zuweisung',

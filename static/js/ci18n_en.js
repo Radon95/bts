@@ -98,6 +98,7 @@ var ci18n_en = {
 'umpires:last_on_court': 'previous match ended at {time}',
 
 'umpire_manage:title': 'Umpire Management',
+'umpire_manage:options': 'Options',
 'umpire_manage:tracking_enabled': 'Automatic Umpire Tracking',
 'umpire_manage:assignment_enabled': 'Automatic Match Assignment',
 'umpire_manage:sj_assignment_enabled': 'Service Judge Assignment',
