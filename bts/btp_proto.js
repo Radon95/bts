@@ -50,7 +50,7 @@ function login_request(password) {
 	return res;
 }
 
-function update_request(match, key_unicode, password, umpire_btp_id, service_judge_btp_id, court_btp_id) {
+function update_request(match, key_unicode, password, umpire_btp_id, service_judge_btp_id, court_btp_id, sync_intermediate) {
 	assert(key_unicode);
 	const matches = [];
 	const res = {
@@ -92,9 +92,12 @@ function update_request(match, key_unicode, password, umpire_btp_id, service_jud
 			// BTP also sends a boolean ScoreSheetPrinted here
 		};
 
-		if (typeof match.team1_won === 'boolean') {
-			m.Winner = match.team1_won ? 1 : 2;
-			m.ScoreStatus = 0; // Won normally (TODO: correctly handle resignations etc.)
+		const is_finished = typeof match.team1_won === 'boolean';
+		if (is_finished || sync_intermediate) {
+			if (is_finished) {
+				m.Winner = match.team1_won ? 1 : 2;
+				m.ScoreStatus = 0; // Won normally (TODO: correctly handle resignations etc.)
+			}
 
 			if (match.network_score) {
 				m.Sets = match.network_score.map(ns => {

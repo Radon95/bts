@@ -69,7 +69,7 @@ function send_request(ip, port, xml_req, timeZone, callback) {
 
 
 class BTPConn {
-	constructor(app, ip, password, tkey, enabled_autofetch, readonly, is_team, timeZone) {
+	constructor(app, ip, password, tkey, enabled_autofetch, readonly, sync_intermediate, is_team, timeZone) {
 		this.app = app;
 		this.last_status = 'Activated';
 		this.ip = ip;
@@ -80,6 +80,7 @@ class BTPConn {
 		this.enabled_autofetch = enabled_autofetch;
 		this.autofetch_timeout = null;
 		this.readonly = readonly;
+		this.sync_intermediate = sync_intermediate;
 		this.is_team = is_team;
 		this.connect();
 	}
@@ -282,7 +283,7 @@ class BTPConn {
 			}
 
 			const req = btp_proto.update_request(
-				match, this.key_unicode, this.password, umpire_btp_id, service_judge_btp_id, court_btp_id);
+				match, this.key_unicode, this.password, umpire_btp_id, service_judge_btp_id, court_btp_id, this.sync_intermediate);
 			this.send(req, response => {
 				const results = response.Action[0].Result;
 				const rescode = results ? results[0] : 'no-result';
