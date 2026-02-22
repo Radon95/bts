@@ -97,6 +97,25 @@ var ci18n_en = {
 'umpires:btp_id': 'BTP ID {btp_id}',
 'umpires:last_on_court': 'previous match ended at {time}',
 
+'umpire_manage:title': 'Umpire Management',
+'umpire_manage:tracking_enabled': 'Automatic Umpire Tracking',
+'umpire_manage:assignment_enabled': 'Automatic Match Assignment',
+'umpire_manage:sj_assignment_enabled': 'Service Judge Assignment',
+'umpire_manage:recalculate': 'Recalculate Stats',
+'umpire_manage:status:ready': 'Available',
+'umpire_manage:status:oncourt': 'On Court',
+'umpire_manage:status:paused': 'Pause',
+'umpire_manage:status:away': 'Away',
+'umpire_manage:info:priority': 'Priority: {score}m',
+'umpire_manage:info:last_match': 'Last: {time}',
+'umpire_manage:info:court': 'Court: {court}',
+'umpire_manage:info:duration': 'Duration: {minutes}m',
+'umpire_manage:info:not_started': 'Not started',
+'umpire_manage:info:score': 'Score: {score}',
+'umpire_manage:info:paused_for': 'Paused for {minutes}m',
+'umpire_manage:info:total_matches': 'Total matches: {total}',
+'umpire_manage:info:today_matches': 'Today: {today}',
+
 'csvexport:winners': 'CSV export (winner\'s certificates)',
 };
 

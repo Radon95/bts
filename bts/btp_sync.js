@@ -421,6 +421,10 @@ function fetch(app, tkey, response, callback) {
 		cb => integrate_courts(app, tkey, btp_state, cb),
 		(court_map, cb) => integrate_matches(app, tkey, btp_state, court_map, cb),
 		cb => integrate_now_on_court(app, tkey, cb),
+		cb => {
+			const umpire_assignment = require('./umpire_assignment');
+			umpire_assignment.reassign(app, tkey, cb);
+		},
 	], callback);
 }
 

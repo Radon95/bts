@@ -162,3 +162,80 @@ table.striped-table {
 	padding-left: 0.3em;
 	white-space: pre-wrap;
 }
+
+/* Umpire Management */
+.umpire_manage_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+
+.umpire_group {
+    flex: 1;
+    min-width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.umpire_group_header {
+    padding: 10px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    border-radius: 4px 4px 0 0;
+}
+
+.umpire_list {
+    min-height: 100px;
+    padding: 10px;
+}
+
+.umpire_tile {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: grab;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.umpire_tile_name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.umpire_tile_info {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.umpire_tile_hover {
+    position: absolute;
+    top: 0;
+    left: 105%;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    z-index: 100;
+    width: 150px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.umpire_manage_controls {
+    padding: 20px;
+    background: #eee;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.umpire_manage_controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
