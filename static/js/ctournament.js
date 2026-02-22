@@ -422,8 +422,30 @@ function ui_edit() {
 	if (curt.btp_readonly) {
 		bro_attrs.checked = 'checked';
 	}
-	uiu.el(btp_readonly_label, 'input', bro_attrs);
+	const btp_readonly_input = uiu.el(btp_readonly_label, 'input', bro_attrs);
 	uiu.el(btp_readonly_label, 'span', {}, ci18n('tournament:edit:btp:readonly'));
+
+	const btp_sync_intermediate_label = uiu.el(btp_fieldset, 'label');
+	const bsi_attrs = {
+		type: 'checkbox',
+		name: 'btp_sync_intermediate',
+	};
+	if (curt.btp_sync_intermediate) {
+		bsi_attrs.checked = 'checked';
+	}
+	if (curt.btp_readonly) {
+		bsi_attrs.disabled = 'disabled';
+	}
+	const btp_sync_intermediate_input = uiu.el(btp_sync_intermediate_label, 'input', bsi_attrs);
+	uiu.el(btp_sync_intermediate_label, 'span', {}, ci18n('tournament:edit:btp:sync_intermediate'));
+
+	btp_readonly_input.addEventListener('change', () => {
+		if (btp_readonly_input.checked) {
+			btp_sync_intermediate_input.setAttribute('disabled', 'disabled');
+		} else {
+			btp_sync_intermediate_input.removeAttribute('disabled');
+		}
+	});
 
 	const btp_ip_label = uiu.el(btp_fieldset, 'label');
 	uiu.el(btp_ip_label, 'span', {}, ci18n('tournament:edit:btp:ip'));
@@ -506,6 +528,7 @@ function ui_edit() {
 			btp_enabled: (!!data.btp_enabled),
 			btp_autofetch_enabled: (!!data.btp_autofetch_enabled),
 			btp_readonly: (!!data.btp_readonly),
+			btp_sync_intermediate: (!!data.btp_sync_intermediate),
 			btp_ip: data.btp_ip,
 			btp_password: data.btp_password,
 			btp_timezone: data.btp_timezone,

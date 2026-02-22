@@ -52,7 +52,7 @@ function handle_tournament_edit_props(app, ws, msg) {
 	const key = msg.key;
 	const props = utils.pluck(msg.props, [
 		'name',
-		'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly',
+		'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly', 'btp_sync_intermediate',
 		'btp_ip', 'btp_password',
 		'is_team', 'is_nation_competition', 'only_now_on_court', 'counting',
 		'ticker_enabled', 'ticker_url', 'ticker_password',
@@ -171,7 +171,9 @@ function _extract_setup(msg_setup) {
 		'match_num',
 		'now_on_court',
 		'umpire_name',
+		'umpire_id',
 		'service_judge_name',
+		'service_judge_id',
 		'is_doubles',
 		'incomplete',
 		'scheduled_time_str',
@@ -218,7 +220,11 @@ function handle_match_edit(app, ws, msg) {
 	const tournament_key = msg.tournament_key;
 	const setup = _extract_setup(msg.setup);
 	// TODO get old setup, make sure no key has been removed
-	app.db.matches.update({_id: msg.id, tournament_key}, {$set: {setup}}, {returnUpdatedDocs: true}, function(err, numAffected, changed_match) {
+	const update = {$set: {setup}};
+	if (msg.btp_update) {
+		update.$set.btp_needsync = true;
+	}
+	app.db.matches.update({_id: msg.id, tournament_key}, update, {returnUpdatedDocs: true}, function(err, numAffected, changed_match) {
 		if (err) {
 			ws.respond(msg, err);
 			return;

@@ -22,6 +22,7 @@ function reconfigure(app, t) {
 		app,
 		t.btp_ip, t.btp_password, t.key,
 		t.btp_autofetch_enabled, t.btp_readonly,
+		t.btp_sync_intermediate,
 		t.is_team, t.btp_timezone);
 	conns_by_tkey.set(t.key, conn);
 }
@@ -49,10 +50,6 @@ function update_score(app, match) {
 	if (!conn) {
 		// Do not output an error; this happens if BTP support gets disabled
 		return;
-	}
-
-	if (typeof match.team1_won !== 'boolean') {
-		return; // Match not finished yet
 	}
 
 	conn.update_score(match);

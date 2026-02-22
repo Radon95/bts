@@ -253,18 +253,16 @@ function integrate_courts(app, tournament_key, btp_state, callback) {
 		if (m) {
 			num = parseInt(m[1]);
 		}
-		const query = {
-			btp_id,
-			name,
-			num,
-			tournament_key,
-		};
-
-		app.db.courts.findOne(query, (err, cur_court) => {
+		app.db.courts.findOne({tournament_key, btp_id}, (err, cur_court) => {
 			if (err) return cb(err);
 			if (cur_court) {
 				res.set(btp_id, cur_court._id);
-				return cb();
+				if (cur_court.name === name && cur_court.num === num) {
+					return cb();
+				}
+				changed = true;
+				app.db.courts.update({_id: cur_court._id}, {$set: {name, num}}, {}, (err) => cb(err));
+				return;
 			}
 
 			const alt_query = {
@@ -320,26 +318,36 @@ function integrate_umpires(app, tournament_key, btp_state, callback) {
 		}
 		const btp_id = o.ID[0];
 
-		app.db.umpires.findOne({tournament_key, name}, (err, cur) => {
+		app.db.umpires.findOne({tournament_key, btp_id}, (err, cur) => {
 			if (err) return cb(err);
 
 			if (cur) {
-				if (cur.btp_id === btp_id) {
+				if (cur.name === name) {
 					return cb();
-				} else {
-					app.db.umpires.update({tournament_key, name}, {$set: {btp_id}}, {}, (err) => cb(err));
-					return;
 				}
+				changed = true;
+				app.db.umpires.update({_id: cur._id}, {$set: {name}}, {}, (err) => cb(err));
+				return;
 			}
 
-			const u = {
-				_id: tournament_key + '_btp_' + btp_id,
-				btp_id,
-				name,
-				tournament_key,
-			};
-			changed = true;
-			app.db.umpires.insert(u, err => cb(err));
+			app.db.umpires.findOne({tournament_key, name}, (err, cur) => {
+				if (err) return cb(err);
+
+				if (cur) {
+					changed = true;
+					app.db.umpires.update({_id: cur._id}, {$set: {btp_id}}, {}, (err) => cb(err));
+					return;
+				}
+
+				const u = {
+					_id: tournament_key + '_btp_' + btp_id,
+					btp_id,
+					name,
+					tournament_key,
+				};
+				changed = true;
+				app.db.umpires.insert(u, err => cb(err));
+			});
 		});
 	}, err => {
 		if (changed) {
