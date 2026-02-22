@@ -107,7 +107,7 @@ var ci18n_de = {
 'umpire_manage:status:oncourt': 'Auf dem Feld',
 'umpire_manage:status:paused': 'Pause',
 'umpire_manage:status:away': 'Abwesend',
-'umpire_manage:info:priority': 'Priorität: {score}m',
+'umpire_manage:info:priority': 'Priorität: {score}',
 'umpire_manage:info:last_match': 'Letztes: {time}',
 'umpire_manage:info:court': 'Feld: {court}',
 'umpire_manage:info:duration': 'Dauer: {minutes}m',

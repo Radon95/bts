@@ -215,9 +215,7 @@ table.striped-table {
 }
 
 .umpire_tile_hover {
-    position: absolute;
-    top: 0;
-    left: 105%;
+    position: fixed;
     background: #333;
     color: white;
     padding: 10px;

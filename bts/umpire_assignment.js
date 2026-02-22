@@ -69,8 +69,9 @@ function _calculate_stats(umpires, matches) {
 function get_priority(u, now) {
 	const weight = (u.weight !== undefined) ? u.weight : 1.0;
 	let time_diff;
-	if (!u.last_match_end_ts || u.last_match_end_ts < get_today_6am()) {
-		time_diff = 1e15; // Infinity-ish
+	const today_6am = get_today_6am();
+	if (!u.last_match_end_ts || u.last_match_end_ts < today_6am) {
+		time_diff = (now - today_6am) + 24 * 60 * 60 * 1000;
 	} else {
 		time_diff = now - u.last_match_end_ts;
 	}

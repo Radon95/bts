@@ -264,6 +264,10 @@ function ui_render() {
 				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
 
 				tile.addEventListener('mouseenter', () => uiu.show(hover_info));
+				tile.addEventListener('mousemove', (e) => {
+					hover_info.style.top = (e.clientY + 10) + 'px';
+					hover_info.style.left = (e.clientX + 10) + 'px';
+				});
 				tile.addEventListener('mouseleave', () => uiu.hide(hover_info));
 			});
 		});

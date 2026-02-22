@@ -209,8 +209,7 @@ function ui_show() {
 	const umpires_link = uiu.el(footer_links, 'span', 'vlink', ci18n('umpires:status:heading'));
 	umpires_link.addEventListener('click', cumpires.ui_status);
 
-	const umpire_manage_link = uiu.el(footer_links, 'span', 'vlink', ci18n('umpire_manage:title'));
-	umpire_manage_link.addEventListener('click', cumpire_manage.ui_show);
+	crouting.render_link(footer_links, `t/${curt.key}/umpire_manage`, ci18n('umpire_manage:title'));
 
 	if (/^dmo35/.test(curt.key)) {
 		const csvexport_link = uiu.el(footer_links, 'span', 'vlink', ci18n('csvexport:winners'));
