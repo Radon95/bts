@@ -42,7 +42,7 @@ var ci18n_en = {
 'Connection lost': 'Connection lost',
 'Create tournament': 'Create tournament',
 'create:id:label': 'tournament ID (all lowercase, no spaces):',
-'experimental': '(experimental)',
+'experimental': 'experimental',
 
 'tournament:edit:id': 'Tournament id:',
 'tournament:edit:language': 'Language:',

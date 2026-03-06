@@ -72,7 +72,7 @@ function ui_options() {
 		type: 'checkbox',
 	});
 	if (curt.service_judge_assignment_enabled) sj_cb.checked = true;
-	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled') + ' ' + ci18n('experimental'));
+	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled') + ' (' + ci18n('experimental') + ')');
 
 	const directions = ['bottom', 'top', 'left', 'right'];
 
@@ -326,9 +326,20 @@ function ui_render() {
 				tile.addEventListener('dragstart', (e) => {
 					e.dataTransfer.setData('umpire_id', u._id);
 					e.dataTransfer.effectAllowed = 'move';
+
+					// Safari bug workaround: Use a hidden clone for the drag image
 					if (e.dataTransfer.setDragImage) {
-						e.dataTransfer.setDragImage(tile, 0, 0);
+						const clone = tile.cloneNode(true);
+						clone.style.position = 'absolute';
+						clone.style.top = '-1000px';
+						clone.style.width = tile.offsetWidth + 'px';
+						document.body.appendChild(clone);
+						e.dataTransfer.setDragImage(clone, 0, 0);
+						setTimeout(() => {
+							document.body.removeChild(clone);
+						}, 0);
 					}
+
 					// Ensure only the tile is dragged, not surrounding content
 					e.stopPropagation();
 				});
@@ -370,12 +381,20 @@ function ui_render() {
 				const today_div = uiu.el(hover_info, 'div');
 				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
 
-				tile.addEventListener('mouseenter', () => uiu.show(hover_info));
+				let hover_timeout;
+				tile.addEventListener('mouseenter', () => {
+					hover_timeout = setTimeout(() => {
+						uiu.show(hover_info);
+					}, 500);
+				});
 				tile.addEventListener('mousemove', (e) => {
 					hover_info.style.top = (e.clientY + 10) + 'px';
 					hover_info.style.left = (e.clientX + 10) + 'px';
 				});
-				tile.addEventListener('mouseleave', () => uiu.hide(hover_info));
+				tile.addEventListener('mouseleave', () => {
+					clearTimeout(hover_timeout);
+					uiu.hide(hover_info);
+				});
 			});
 		});
 	});
