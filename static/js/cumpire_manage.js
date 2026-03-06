@@ -290,27 +290,6 @@ function ui_render() {
 			const list = uiu.el(group, 'div', 'umpire_list');
 			list.dataset.status = status.id;
 
-			if (status.id === 'oncourt' && courts) {
-				const oncourt_container = uiu.el(group, 'div', 'umpire_oncourt_container');
-				courts.forEach(court => {
-					const section = uiu.el(oncourt_container, 'div', 'umpire_court_section');
-					uiu.el(section, 'div', 'umpire_court_label', court.num);
-					const court_umpires_container = uiu.el(section, 'div', 'umpire_court_umpires');
-
-					const court_umpires = group_umpires.filter(u => (u.on_court_court_id === court._id) || (u.on_court_court_id === court.num));
-					const umpire = court_umpires.find(u => u.on_court_role === 'umpire');
-					const sj = court_umpires.find(u => u.on_court_role === 'service_judge');
-
-					if (umpire) {
-						render_tile(court_umpires_container, umpire, false, !!sj);
-					}
-					if (sj) {
-						render_tile(court_umpires_container, sj, true);
-					}
-				});
-				return;
-			}
-
 			if (is_slid_out) {
 				header.addEventListener('dragenter', (e) => {
 					e.preventDefault();

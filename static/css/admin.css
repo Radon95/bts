@@ -239,12 +239,13 @@ table.striped-table {
 }
 
 .umpire_oncourt_container .umpire_tile_sj {
-    padding-top: 0;
+    padding-top: 8px;
     opacity: 0.8;
+    border-top: 1px dashed #ccc;
 }
 
 .umpire_oncourt_container .umpire_tile_with_sj {
-    padding-bottom: 2px;
+    padding-bottom: 4px;
 }
 
 .umpire_tile {
