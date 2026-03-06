@@ -116,6 +116,12 @@ var ci18n_de = {
 'umpire_manage:info:paused_for': 'Pause seit {minutes}m',
 'umpire_manage:info:total_matches': 'Gesamt Spiele: {total}',
 'umpire_manage:info:today_matches': 'Heute: {today}',
+'umpire_manage:pause_slide_direction': 'Richtung für Pause-Liste',
+'umpire_manage:away_slide_direction': 'Richtung für Abwesend-Liste',
+'umpire_manage:direction:bottom': 'Unten',
+'umpire_manage:direction:left': 'Links',
+'umpire_manage:direction:right': 'Rechts',
+'Close': 'Schließen',
 
 'csvexport:winners': 'CSV-Export für Siegerurkunden',
 };

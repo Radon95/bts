@@ -238,3 +238,108 @@ table.striped-table {
     align-items: center;
     gap: 5px;
 }
+
+.umpire_tile_options {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #999;
+}
+.umpire_tile_options:hover {
+    color: #333;
+}
+
+.umpire_details_weight_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.umpire_details_stat {
+    margin-bottom: 5px;
+}
+
+/* Sliding and Pinning Lists */
+.umpire_group.umpire_group_sliding {
+    position: fixed;
+    z-index: 500;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    min-width: 300px;
+}
+
+.umpire_group.umpire_group_sliding .umpire_group_header {
+    cursor: pointer;
+}
+
+.umpire_group_sliding[data-direction="bottom"] {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(100% - 40px));
+}
+.umpire_group_sliding[data-direction="bottom"].umpire_group_active,
+.umpire_group_sliding[data-direction="bottom"]:hover {
+    transform: translateX(-50%) translateY(0);
+}
+
+.umpire_group_sliding[data-direction="left"] {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(-100% + 40px));
+}
+.umpire_group_sliding[data-direction="left"].umpire_group_active,
+.umpire_group_sliding[data-direction="left"]:hover {
+    transform: translateY(-50%) translateX(0);
+}
+.umpire_group_sliding[data-direction="left"] .umpire_group_header {
+    writing-mode: vertical-lr;
+    height: 100%;
+    border-right: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 4px 0 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.umpire_group_sliding[data-direction="left"] {
+    display: flex;
+    flex-direction: row;
+}
+
+.umpire_group_sliding[data-direction="right"] {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(100% - 40px));
+}
+.umpire_group_sliding[data-direction="right"].umpire_group_active,
+.umpire_group_sliding[data-direction="right"]:hover {
+    transform: translateY(-50%) translateX(0);
+}
+.umpire_group_sliding[data-direction="right"] .umpire_group_header {
+    writing-mode: vertical-lr;
+    height: 100%;
+    border-left: 1px solid #ccc;
+    border-bottom: none;
+    border-radius: 0 4px 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.umpire_group_sliding[data-direction="right"] {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.umpire_group_pinned_toggle {
+    float: right;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.umpire_manage_container {
+    justify-content: center;
+}

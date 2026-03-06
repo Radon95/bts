@@ -165,7 +165,7 @@ if ((typeof module !== 'undefined') && (typeof require !== 'undefined')) {
 	var crouting = require('./crouting');
 	var cumpire_manage = require('./cumpire_manage');
 	var uiu = require('../bup/js/uiu');
-	var utils = require('./utils');
+	var utils = require('../bup/js/utils');
 
     module.exports = change;
 }

@@ -116,6 +116,12 @@ var ci18n_en = {
 'umpire_manage:info:paused_for': 'Paused for {minutes}m',
 'umpire_manage:info:total_matches': 'Total matches: {total}',
 'umpire_manage:info:today_matches': 'Today: {today}',
+'umpire_manage:pause_slide_direction': 'Pause list slide direction',
+'umpire_manage:away_slide_direction': 'Away list slide direction',
+'umpire_manage:direction:bottom': 'Bottom',
+'umpire_manage:direction:left': 'Left',
+'umpire_manage:direction:right': 'Right',
+'Close': 'Close',
 
 'csvexport:winners': 'CSV export (winner\'s certificates)',
 };
