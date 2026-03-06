@@ -209,6 +209,8 @@ function ui_show() {
 	const umpires_link = uiu.el(footer_links, 'span', 'vlink', ci18n('umpires:status:heading'));
 	umpires_link.addEventListener('click', cumpires.ui_status);
 
+	crouting.render_link(footer_links, `t/${curt.key}/umpire_manage`, ci18n('umpire_manage:title'));
+
 	if (/^dmo35/.test(curt.key)) {
 		const csvexport_link = uiu.el(footer_links, 'span', 'vlink', ci18n('csvexport:winners'));
 		csvexport_link.addEventListener('click', ccsvexport.export_winners);
@@ -891,6 +893,7 @@ if ((typeof module !== 'undefined') && (typeof require !== 'undefined')) {
 	var cmatch = require('./cmatch');
 	var crouting = require('./crouting');
 	var cumpires = require('./cumpires');
+	var cumpire_manage = require('./cumpire_manage');
 	var debug = require('./debug');
 	var form_utils = require('./form_utils');
 	var i18n = require('../bup/js/i18n');

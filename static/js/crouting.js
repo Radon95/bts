@@ -88,6 +88,10 @@ function rerender() {
 	_load(window.location.pathname);
 }
 
+function get_vpath() {
+	return window.location.pathname.substring(path_prefix.length);
+}
+
 function _set_path(new_path) {
 	history.pushState(null, '', new_path);
 }
@@ -117,6 +121,7 @@ function render_link(container, path, text) {
 
 return {
 	init,
+	get_vpath,
 	navigate_to,
 	on_change,
 	register,

@@ -115,6 +115,22 @@ function default_handler_func(rerender, special_funcs, c) {
 		uiu.qsEach('select[name="umpire_name"]', function(select) {
 			cmatch.render_umpire_options(select, select.value);
 		});
+		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+			cumpire_manage.ui_render();
+		}
+		break;
+	case 'umpire_edit':
+		{
+		const u = utils.find(curt.umpires, u => u._id === c.val._id);
+		if (u) {
+			Object.assign(u, c.val);
+		} else {
+			curt.umpires.push(c.val);
+		}
+		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+			cumpire_manage.ui_render();
+		}
+		}
 		break;
 	case 'score':
 		change_score(c.val);
@@ -146,8 +162,10 @@ return {
 if ((typeof module !== 'undefined') && (typeof require !== 'undefined')) {
 	var cerror = require('./cerror');
 	var cmatch = require('./cmatch');
+	var crouting = require('./crouting');
+	var cumpire_manage = require('./cumpire_manage');
 	var uiu = require('../bup/js/uiu');
-	var utils = require('./utils');
+	var utils = require('../bup/js/utils');
 
     module.exports = change;
 }
