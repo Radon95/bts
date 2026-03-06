@@ -53,47 +53,51 @@ function ui_options() {
 
 	uiu.el(dlg, 'h2', {}, ci18n('umpire_manage:options'));
 
-	const tracking_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const tracking_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	const tracking_cb = uiu.el(tracking_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.umpire_tracking_enabled) tracking_cb.checked = true;
 	uiu.el(tracking_label, 'span', {}, ' ' + ci18n('umpire_manage:tracking_enabled'));
 
-	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 20px;'});
 	const assignment_cb = uiu.el(assignment_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.umpire_assignment_enabled) assignment_cb.checked = true;
 	uiu.el(assignment_label, 'span', {}, ' ' + ci18n('umpire_manage:assignment_enabled'));
 
-	const sj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const sj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 40px;'});
 	const sj_cb = uiu.el(sj_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.service_judge_assignment_enabled) sj_cb.checked = true;
-	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled'));
+	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled') + ' (' + ci18n('experimental') + ')');
 
-	const directions = ['bottom', 'left', 'right'];
+	const directions = ['bottom', 'top', 'left', 'right'];
 
-	const pause_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const pause_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	uiu.el(pause_dir_label, 'span', {}, ci18n('umpire_manage:pause_slide_direction') + ': ');
 	const pause_dir_select = uiu.el(pause_dir_label, 'select');
 	directions.forEach(dir => {
-		uiu.el(pause_dir_select, 'option', {
+		const opt = uiu.el(pause_dir_select, 'option', {
 			value: dir,
-			selected: (curt.umpire_manage_pause_direction || 'bottom') === dir ? 'selected' : undefined,
 		}, ci18n(`umpire_manage:direction:${dir}`));
+		if ((curt.umpire_manage_pause_direction || 'bottom') === dir) {
+			opt.selected = true;
+		}
 	});
 
-	const away_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const away_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	uiu.el(away_dir_label, 'span', {}, ci18n('umpire_manage:away_slide_direction') + ': ');
 	const away_dir_select = uiu.el(away_dir_label, 'select');
 	directions.forEach(dir => {
-		uiu.el(away_dir_select, 'option', {
+		const opt = uiu.el(away_dir_select, 'option', {
 			value: dir,
-			selected: (curt.umpire_manage_away_direction || 'bottom') === dir ? 'selected' : undefined,
 		}, ci18n(`umpire_manage:direction:${dir}`));
+		if ((curt.umpire_manage_away_direction || 'bottom') === dir) {
+			opt.selected = true;
+		}
 	});
 
 	function update_disabled() {
@@ -202,6 +206,7 @@ function ui_render() {
 		uiu.empty(container);
 
 		const umpires = response.umpires;
+		const courts = curt.courts;
 		const statuses = [
 			{id: 'ready', color: '#4caf50', label: ci18n('umpire_manage:status:ready')},
 			{id: 'oncourt', color: '#ffeb3b', label: ci18n('umpire_manage:status:oncourt')},
@@ -222,7 +227,7 @@ function ui_render() {
 
 		statuses.forEach(status => {
 			const is_slid_out = status.slidable && !slide_config[status.id].is_pinned;
-			const group = uiu.el(container, 'div', 'umpire_group' + (is_slid_out ? ' umpire_group_sliding' : ''));
+			const group = uiu.el(container, 'div', 'umpire_group' + (is_slid_out ? ' umpire_group_sliding' : '') + (status.id === 'oncourt' ? ' oncourt_group' : ''));
 			const header = uiu.el(group, 'div', {
 				'class': 'umpire_group_header',
 				style: `background-color: ${status.color}`,
@@ -234,20 +239,43 @@ function ui_render() {
 			}
 
 			if (is_slid_out) {
-				group.dataset.direction = slide_config[status.id].direction;
-				const other_slid_out = statuses.find(s => s.slidable && s.id !== status.id && !slide_config[s.id].is_pinned && slide_config[s.id].direction === slide_config[status.id].direction);
+				const dir = slide_config[status.id].direction;
+				group.dataset.direction = dir;
+				const other_slid_out = statuses.find(s => s.slidable && s.id !== status.id && !slide_config[s.id].is_pinned && slide_config[s.id].direction === dir);
 				if (other_slid_out) {
 					const is_first = status.id === 'paused';
-					if (slide_config[status.id].direction === 'bottom') {
-						group.style.left = is_first ? 'calc(50% - 160px)' : 'calc(50% + 160px)';
+					if (dir === 'bottom' || dir === 'top') {
+						group.style.left = is_first ? 'calc(50% - 170px)' : 'calc(50% + 170px)';
 					} else {
-						group.style.top = is_first ? 'calc(50% - 100px)' : 'calc(50% + 100px)';
+						group.style.top = is_first ? 'calc(50% - 170px)' : 'calc(50% + 170px)';
 					}
 				}
 			}
 
 			const title_span = uiu.el(header, 'span', 'umpire_group_title');
 			uiu.text(title_span, `${status.label} (${group_umpires.length})`);
+
+			if (status.id === 'oncourt' && courts) {
+				const oncourt_container = uiu.el(group, 'div', 'umpire_oncourt_container');
+				oncourt_container.dataset.status = status.id;
+				courts.forEach(court => {
+					const section = uiu.el(oncourt_container, 'div', 'umpire_court_section');
+					uiu.el(section, 'div', 'umpire_court_label', court.num);
+					const court_umpires_container = uiu.el(section, 'div', 'umpire_court_umpires');
+
+					const court_umpires = group_umpires.filter(u => (u.on_court_court_id === court._id) || (u.on_court_court_id === court.num));
+					const umpire = court_umpires.find(u => u.on_court_role === 'umpire');
+					const sj = court_umpires.find(u => u.on_court_role === 'service_judge');
+
+					if (umpire) {
+						render_tile(court_umpires_container, umpire, false, !!sj);
+					}
+					if (sj) {
+						render_tile(court_umpires_container, sj, true);
+					}
+				});
+				return;
+			}
 
 			if (status.slidable) {
 				const pin_btn = uiu.el(header, 'span', 'umpire_group_pinned_toggle', slide_config[status.id].is_pinned ? '📌' : '📍');
@@ -311,21 +339,49 @@ function ui_render() {
 				});
 			});
 
-			group_umpires.forEach(u => {
-				const tile = uiu.el(list, 'div', {
-					'class': 'umpire_tile',
+			function render_tile(container, u, is_sj, has_sj) {
+				const tile = uiu.el(container, 'div', {
+					'class': 'umpire_tile' + (is_sj ? ' umpire_tile_sj' : '') + (has_sj ? ' umpire_tile_with_sj' : ''),
 					draggable: (u.calculated_status !== 'oncourt' ? 'true' : 'false'),
 				});
 				tile.dataset.umpireId = u._id;
 
+				let hover_timeout;
+				const hover_info = uiu.el(tile, 'div', {
+					'class': 'umpire_tile_hover',
+					style: 'display:none',
+				});
+				const total_div = uiu.el(hover_info, 'div');
+				uiu.text(total_div, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
+				const today_div = uiu.el(hover_info, 'div');
+				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
+
 				tile.addEventListener('dragstart', (e) => {
+					clearTimeout(hover_timeout);
+					uiu.hide(hover_info);
+
 					e.dataTransfer.setData('umpire_id', u._id);
 					e.dataTransfer.effectAllowed = 'move';
+
+					// Safari bug workaround: Use a hidden clone for the drag image
+					if (e.dataTransfer.setDragImage) {
+						const clone = tile.cloneNode(true);
+						clone.style.position = 'absolute';
+						clone.style.top = '-1000px';
+						clone.style.width = tile.offsetWidth + 'px';
+						document.body.appendChild(clone);
+						e.dataTransfer.setDragImage(clone, 0, 0);
+						setTimeout(() => {
+							document.body.removeChild(clone);
+						}, 0);
+					}
+
 					// Ensure only the tile is dragged, not surrounding content
 					e.stopPropagation();
 				});
 
-				uiu.el(tile, 'div', 'umpire_tile_name', u.name);
+				const name_div = uiu.el(tile, 'div', 'umpire_tile_name');
+				uiu.text(name_div, u.name + (is_sj ? ' (SJ)' : ''));
 
 				const options_btn = uiu.el(tile, 'div', 'umpire_tile_options', '⋮');
 				options_btn.addEventListener('click', (e) => {
@@ -337,38 +393,39 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:priority', {score: Math.round(u.priority_score / 60000)}));
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:last_match', {time: (u.last_match_end_ts ? utils.time_str(u.last_match_end_ts) : 'N/A')}));
 				} else if (u.calculated_status === 'oncourt') {
-					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:court', {court: u.on_court_court_id}));
-					if (u.on_court_match_start_ts) {
-						const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
-					} else {
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:not_started'));
-					}
-					if (u.on_court_match_score) {
-						const score_str = u.on_court_match_score.map(s => s[0] + '-' + s[1]).join(' ');
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:score', {score: score_str}));
+					if (!is_sj) {
+						if (u.on_court_match_start_ts) {
+							const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
+						} else {
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:not_started'));
+						}
+						if (u.on_court_match_score) {
+							const score_str = u.on_court_match_score.map(s => s[0] + '-' + s[1]).join(' ');
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:score', {score: score_str}));
+						}
 					}
 				} else if (u.calculated_status === 'paused') {
 					const pause_duration = Math.round((Date.now() - u.paused_since_ts) / 60000);
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:paused_for', {minutes: pause_duration}));
 				}
 
-				const hover_info = uiu.el(tile, 'div', {
-					'class': 'umpire_tile_hover',
-					style: 'display:none',
+				tile.addEventListener('mouseenter', () => {
+					hover_timeout = setTimeout(() => {
+						uiu.show(hover_info);
+					}, 500);
 				});
-				const total_div = uiu.el(hover_info, 'div');
-				uiu.text(total_div, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
-				const today_div = uiu.el(hover_info, 'div');
-				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
-
-				tile.addEventListener('mouseenter', () => uiu.show(hover_info));
 				tile.addEventListener('mousemove', (e) => {
 					hover_info.style.top = (e.clientY + 10) + 'px';
 					hover_info.style.left = (e.clientX + 10) + 'px';
 				});
-				tile.addEventListener('mouseleave', () => uiu.hide(hover_info));
-			});
+				tile.addEventListener('mouseleave', () => {
+					clearTimeout(hover_timeout);
+					uiu.hide(hover_info);
+				});
+			}
+
+			group_umpires.forEach(u => render_tile(list, u));
 		});
 	});
 }

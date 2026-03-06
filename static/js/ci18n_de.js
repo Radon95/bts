@@ -42,7 +42,7 @@ var ci18n_de = {
 'Connection lost': 'Verbindung verloren',
 'Create tournament': 'Turnier erstellen',
 'create:id:label': 'Turnier-ID (Kleinbuchstaben, keine Leerzeichen):',
-'experimental': '(experimentell)',
+'experimental': 'experimentell',
 
 'tournament:edit:id': 'Turnier-ID:',
 'tournament:edit:language': 'Sprache:',
@@ -119,6 +119,7 @@ var ci18n_de = {
 'umpire_manage:pause_slide_direction': 'Richtung für Pause-Liste',
 'umpire_manage:away_slide_direction': 'Richtung für Abwesend-Liste',
 'umpire_manage:direction:bottom': 'Unten',
+'umpire_manage:direction:top': 'Oben',
 'umpire_manage:direction:left': 'Links',
 'umpire_manage:direction:right': 'Rechts',
 'Close': 'Schließen',

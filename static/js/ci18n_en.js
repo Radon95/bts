@@ -42,7 +42,7 @@ var ci18n_en = {
 'Connection lost': 'Connection lost',
 'Create tournament': 'Create tournament',
 'create:id:label': 'tournament ID (all lowercase, no spaces):',
-'experimental': '(experimental)',
+'experimental': 'experimental',
 
 'tournament:edit:id': 'Tournament id:',
 'tournament:edit:language': 'Language:',
@@ -119,6 +119,7 @@ var ci18n_en = {
 'umpire_manage:pause_slide_direction': 'Pause list slide direction',
 'umpire_manage:away_slide_direction': 'Away list slide direction',
 'umpire_manage:direction:bottom': 'Bottom',
+'umpire_manage:direction:top': 'Top',
 'umpire_manage:direction:left': 'Left',
 'umpire_manage:direction:right': 'Right',
 'Close': 'Close',

@@ -178,19 +178,74 @@ table.striped-table {
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #f9f9f9;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .umpire_group_header {
-    padding: 10px;
+    padding: 10px 15px;
     font-weight: bold;
     color: #333;
     border-bottom: 1px solid #ccc;
-    border-radius: 4px 4px 0 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .umpire_list {
     min-height: 100px;
     padding: 10px;
+    box-sizing: border-box;
+}
+
+.umpire_oncourt_container {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.umpire_court_section {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #ccc;
+}
+.umpire_court_section:last-child {
+    border-bottom: none;
+}
+
+.umpire_court_label {
+    width: 45px;
+    font-weight: bold;
+    color: white;
+    background: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 0;
+}
+
+.umpire_court_umpires {
+    flex: 1;
+    padding: 0;
+}
+
+.umpire_oncourt_container .umpire_tile {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 15px;
+}
+
+.umpire_oncourt_container .umpire_tile_sj {
+    padding-top: 8px;
+    opacity: 0.8;
+    border-top: 1px dashed #ccc;
+}
+
+.umpire_oncourt_container .umpire_tile_with_sj {
+    padding-bottom: 4px;
 }
 
 .umpire_tile {
@@ -270,28 +325,63 @@ table.striped-table {
     z-index: 500;
     transition: transform 0.3s ease;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    min-width: 300px;
+    min-width: 320px;
     background: #f9f9f9;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.umpire_group.umpire_group_sliding .umpire_list[data-status="oncourt"],
+.umpire_group.umpire_group_sliding.oncourt_group {
+    min-width: 380px;
+}
+
+.umpire_group.umpire_group_sliding .umpire_list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.umpire_group.umpire_group_sliding .umpire_tile {
+    flex-shrink: 0;
 }
 
 .umpire_group.umpire_group_sliding .umpire_group_header {
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .umpire_group_sliding[data-direction="bottom"] {
     bottom: 0;
     left: 50%;
-    transform: translateX(-50%) translateY(calc(100% - 40px));
+    transform: translateX(-50%) translateY(calc(100% - 51px));
 }
 .umpire_group_sliding[data-direction="bottom"].umpire_group_active,
 .umpire_group_sliding[data-direction="bottom"]:hover {
     transform: translateX(-50%) translateY(0);
 }
 
+.umpire_group_sliding[data-direction="top"] {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(-100% + 51px));
+    flex-direction: column-reverse;
+}
+.umpire_group_sliding[data-direction="top"] .umpire_group_header {
+    border-top: 1px solid #ccc;
+    border-bottom: none;
+}
+.umpire_group_sliding[data-direction="top"].umpire_group_active,
+.umpire_group_sliding[data-direction="top"]:hover {
+    transform: translateX(-50%) translateY(0);
+}
+
 .umpire_group_sliding[data-direction="left"] {
     left: 0;
     top: 50%;
-    transform: translateY(-50%) translateX(calc(-100% + 40px));
+    transform: translateY(-50%) translateX(calc(-100% + 67px));
+    flex-direction: row-reverse;
+    height: 320px;
 }
 .umpire_group_sliding[data-direction="left"].umpire_group_active,
 .umpire_group_sliding[data-direction="left"]:hover {
@@ -300,22 +390,20 @@ table.striped-table {
 .umpire_group_sliding[data-direction="left"] .umpire_group_header {
     writing-mode: vertical-lr;
     height: 100%;
-    border-right: 1px solid #ccc;
+    border-left: 1px solid #ccc;
     border-bottom: none;
-    border-radius: 4px 0 0 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.umpire_group_sliding[data-direction="left"] {
-    display: flex;
-    flex-direction: row;
+    padding: 40px 10px;
 }
 
 .umpire_group_sliding[data-direction="right"] {
     right: 0;
     top: 50%;
-    transform: translateY(-50%) translateX(calc(100% - 40px));
+    transform: translateY(-50%) translateX(calc(100% - 67px));
+    flex-direction: row;
+    height: 320px;
 }
 .umpire_group_sliding[data-direction="right"].umpire_group_active,
 .umpire_group_sliding[data-direction="right"]:hover {
@@ -324,22 +412,22 @@ table.striped-table {
 .umpire_group_sliding[data-direction="right"] .umpire_group_header {
     writing-mode: vertical-lr;
     height: 100%;
-    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
     border-bottom: none;
-    border-radius: 0 4px 4px 0;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.umpire_group_sliding[data-direction="right"] {
-    display: flex;
-    flex-direction: row-reverse;
+    padding: 40px 20px;
 }
 
 .umpire_group_pinned_toggle {
-    float: right;
     cursor: pointer;
-    margin-left: 10px;
+    margin-left: 60px;
+}
+.umpire_group_sliding[data-direction="left"] .umpire_group_pinned_toggle,
+.umpire_group_sliding[data-direction="right"] .umpire_group_pinned_toggle {
+    margin-left: 0;
+    margin-top: 60px;
 }
 
 .umpire_manage_container {
