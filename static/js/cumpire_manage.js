@@ -159,14 +159,12 @@ function ui_umpire_details(u) {
 
 	const weight_controls = uiu.el(dlg, 'div', 'umpire_details_weight_controls');
 	uiu.el(weight_controls, 'span', {}, 'Weight: ');
-	const minus_btn = uiu.el(weight_controls, 'button', {}, '-');
 	const weight_input = uiu.el(weight_controls, 'input', {
 		type: 'number',
 		step: '0.1',
 		value: (u.weight !== undefined ? u.weight.toFixed(1) : '1.0'),
-		style: 'width: 50px',
+		style: 'width: 4em',
 	});
-	const plus_btn = uiu.el(weight_controls, 'button', {}, '+');
 
 	function save_weight(new_weight) {
 		new_weight = Math.max(0.1, Math.round(new_weight * 10) / 10);
@@ -183,14 +181,6 @@ function ui_umpire_details(u) {
 		});
 	}
 
-	minus_btn.addEventListener('click', () => {
-		const old_weight = parseFloat(weight_input.value) || 1.0;
-		save_weight(old_weight - 0.1);
-	});
-	plus_btn.addEventListener('click', () => {
-		const old_weight = parseFloat(weight_input.value) || 1.0;
-		save_weight(old_weight + 0.1);
-	});
 	weight_input.addEventListener('change', () => {
 		save_weight(parseFloat(weight_input.value) || 1.0);
 	});
@@ -391,6 +381,7 @@ crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
 
 return {
 	ui_show,
+	ui_render,
 };
 
 })();
