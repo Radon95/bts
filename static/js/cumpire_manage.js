@@ -160,12 +160,16 @@ function ui_umpire_details(u) {
 	const weight_controls = uiu.el(dlg, 'div', 'umpire_details_weight_controls');
 	uiu.el(weight_controls, 'span', {}, 'Weight: ');
 	const minus_btn = uiu.el(weight_controls, 'button', {}, '-');
-	const weight_val = uiu.el(weight_controls, 'span', {style: 'min-width: 40px; display: inline-block'}, (u.weight !== undefined ? u.weight.toFixed(1) : '1.0'));
+	const weight_input = uiu.el(weight_controls, 'input', {
+		type: 'number',
+		step: '0.1',
+		value: (u.weight !== undefined ? u.weight.toFixed(1) : '1.0'),
+		style: 'width: 50px',
+	});
 	const plus_btn = uiu.el(weight_controls, 'button', {}, '+');
 
-	function update_weight(delta) {
-		const old_weight = (u.weight !== undefined ? u.weight : 1.0);
-		const new_weight = Math.max(0.1, Math.round((old_weight + delta) * 10) / 10);
+	function save_weight(new_weight) {
+		new_weight = Math.max(0.1, Math.round(new_weight * 10) / 10);
 		send({
 			type: 'umpire_edit_props',
 			tournament_key: curt.key,
@@ -174,13 +178,22 @@ function ui_umpire_details(u) {
 		}, (err) => {
 			if (err) return cerror.net(err);
 			u.weight = new_weight;
-			weight_val.textContent = new_weight.toFixed(1);
+			weight_input.value = new_weight.toFixed(1);
 			ui_render();
 		});
 	}
 
-	minus_btn.addEventListener('click', () => update_weight(-0.1));
-	plus_btn.addEventListener('click', () => update_weight(0.1));
+	minus_btn.addEventListener('click', () => {
+		const old_weight = parseFloat(weight_input.value) || 1.0;
+		save_weight(old_weight - 0.1);
+	});
+	plus_btn.addEventListener('click', () => {
+		const old_weight = parseFloat(weight_input.value) || 1.0;
+		save_weight(old_weight + 0.1);
+	});
+	weight_input.addEventListener('change', () => {
+		save_weight(parseFloat(weight_input.value) || 1.0);
+	});
 
 	const btn_row = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: right;'});
 	const close_btn = uiu.el(btn_row, 'button', {}, ci18n('Close'));
@@ -247,7 +260,7 @@ function ui_render() {
 			uiu.text(title_span, `${status.label} (${group_umpires.length})`);
 
 			if (status.slidable) {
-				const pin_btn = uiu.el(header, 'span', 'umpire_group_pinned_toggle', slide_config[status.id].is_pinned ? '📌' : '🔓');
+				const pin_btn = uiu.el(header, 'span', 'umpire_group_pinned_toggle', slide_config[status.id].is_pinned ? '📌' : '📍');
 				pin_btn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					const was_pinned = localStorage.getItem(`umpire_manage_pinned_${status.id}`) === 'true';
@@ -258,6 +271,16 @@ function ui_render() {
 
 			const list = uiu.el(group, 'div', 'umpire_list');
 			list.dataset.status = status.id;
+
+			if (is_slid_out) {
+				header.addEventListener('dragenter', (e) => {
+					e.preventDefault();
+					group.classList.add('umpire_group_active');
+				});
+				header.addEventListener('dragover', (e) => {
+					e.preventDefault();
+				});
+			}
 
 			list.addEventListener('dragover', (e) => {
 				e.preventDefault();
@@ -308,6 +331,8 @@ function ui_render() {
 				tile.addEventListener('dragstart', (e) => {
 					e.dataTransfer.setData('umpire_id', u._id);
 					e.dataTransfer.effectAllowed = 'move';
+					// Ensure only the tile is dragged, not surrounding content
+					e.stopPropagation();
 				});
 
 				uiu.el(tile, 'div', 'umpire_tile_name', u.name);
