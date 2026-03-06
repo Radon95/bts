@@ -163,7 +163,7 @@ function ui_umpire_details(u) {
 		type: 'number',
 		step: '0.1',
 		value: (u.weight !== undefined ? u.weight.toFixed(1) : '1.0'),
-		style: 'width: 4em',
+		style: 'width: 5em',
 	});
 
 	function save_weight(new_weight) {
@@ -193,13 +193,13 @@ function ui_umpire_details(u) {
 function ui_render() {
 	const container = uiu.qs('.umpire_manage_container');
 	if (!container) return;
-	uiu.empty(container);
 
 	send({
 		type: 'umpire_assignment_get',
 		tournament_key: curt.key,
 	}, (err, response) => {
 		if (err) return cerror.net(err);
+		uiu.empty(container);
 
 		const umpires = response.umpires;
 		const statuses = [
