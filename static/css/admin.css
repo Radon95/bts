@@ -199,6 +199,38 @@ table.striped-table {
     box-sizing: border-box;
 }
 
+.umpire_oncourt_container {
+    padding: 10px;
+}
+
+.umpire_court_section {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.umpire_court_label {
+    width: 30px;
+    font-weight: bold;
+    color: #666;
+    padding-top: 10px;
+    flex-shrink: 0;
+}
+
+.umpire_court_umpires {
+    flex: 1;
+}
+
+.umpire_tile_sj {
+    margin-top: -11px;
+    border-style: dashed;
+    opacity: 0.9;
+}
+
+.umpire_tile_with_sj {
+    margin-bottom: 0;
+}
+
 .umpire_tile {
     background: white;
     border: 1px solid #ddd;

@@ -206,6 +206,7 @@ function ui_render() {
 		uiu.empty(container);
 
 		const umpires = response.umpires;
+		const courts = curt.courts;
 		const statuses = [
 			{id: 'ready', color: '#4caf50', label: ci18n('umpire_manage:status:ready')},
 			{id: 'oncourt', color: '#ffeb3b', label: ci18n('umpire_manage:status:oncourt')},
@@ -253,6 +254,27 @@ function ui_render() {
 
 			const title_span = uiu.el(header, 'span', 'umpire_group_title');
 			uiu.text(title_span, `${status.label} (${group_umpires.length})`);
+
+			if (status.id === 'oncourt' && courts) {
+				const oncourt_container = uiu.el(group, 'div', 'umpire_oncourt_container');
+				courts.forEach(court => {
+					const section = uiu.el(oncourt_container, 'div', 'umpire_court_section');
+					uiu.el(section, 'div', 'umpire_court_label', court.num);
+					const court_umpires_container = uiu.el(section, 'div', 'umpire_court_umpires');
+
+					const court_umpires = group_umpires.filter(u => u.on_court_court_id === court._id);
+					const umpire = court_umpires.find(u => u.on_court_role === 'umpire');
+					const sj = court_umpires.find(u => u.on_court_role === 'service_judge');
+
+					if (umpire) {
+						render_tile(court_umpires_container, umpire, false, !!sj);
+					}
+					if (sj) {
+						render_tile(court_umpires_container, sj, true);
+					}
+				});
+				return;
+			}
 
 			if (status.slidable) {
 				const pin_btn = uiu.el(header, 'span', 'umpire_group_pinned_toggle', slide_config[status.id].is_pinned ? '📌' : '📍');
@@ -316,14 +338,27 @@ function ui_render() {
 				});
 			});
 
-			group_umpires.forEach(u => {
-				const tile = uiu.el(list, 'div', {
-					'class': 'umpire_tile',
+			function render_tile(container, u, is_sj, has_sj) {
+				const tile = uiu.el(container, 'div', {
+					'class': 'umpire_tile' + (is_sj ? ' umpire_tile_sj' : '') + (has_sj ? ' umpire_tile_with_sj' : ''),
 					draggable: (u.calculated_status !== 'oncourt' ? 'true' : 'false'),
 				});
 				tile.dataset.umpireId = u._id;
 
+				let hover_timeout;
+				const hover_info = uiu.el(tile, 'div', {
+					'class': 'umpire_tile_hover',
+					style: 'display:none',
+				});
+				const total_div = uiu.el(hover_info, 'div');
+				uiu.text(total_div, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
+				const today_div = uiu.el(hover_info, 'div');
+				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
+
 				tile.addEventListener('dragstart', (e) => {
+					clearTimeout(hover_timeout);
+					uiu.hide(hover_info);
+
 					e.dataTransfer.setData('umpire_id', u._id);
 					e.dataTransfer.effectAllowed = 'move';
 
@@ -344,7 +379,8 @@ function ui_render() {
 					e.stopPropagation();
 				});
 
-				uiu.el(tile, 'div', 'umpire_tile_name', u.name);
+				const name_div = uiu.el(tile, 'div', 'umpire_tile_name');
+				uiu.text(name_div, u.name + (is_sj ? ' (SJ)' : ''));
 
 				const options_btn = uiu.el(tile, 'div', 'umpire_tile_options', '⋮');
 				options_btn.addEventListener('click', (e) => {
@@ -356,7 +392,6 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:priority', {score: Math.round(u.priority_score / 60000)}));
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:last_match', {time: (u.last_match_end_ts ? utils.time_str(u.last_match_end_ts) : 'N/A')}));
 				} else if (u.calculated_status === 'oncourt') {
-					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:court', {court: u.on_court_court_id}));
 					if (u.on_court_match_start_ts) {
 						const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
 						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
@@ -372,16 +407,6 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:paused_for', {minutes: pause_duration}));
 				}
 
-				const hover_info = uiu.el(tile, 'div', {
-					'class': 'umpire_tile_hover',
-					style: 'display:none',
-				});
-				const total_div = uiu.el(hover_info, 'div');
-				uiu.text(total_div, ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
-				const today_div = uiu.el(hover_info, 'div');
-				uiu.text(today_div, ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
-
-				let hover_timeout;
 				tile.addEventListener('mouseenter', () => {
 					hover_timeout = setTimeout(() => {
 						uiu.show(hover_info);
@@ -395,7 +420,9 @@ function ui_render() {
 					clearTimeout(hover_timeout);
 					uiu.hide(hover_info);
 				});
-			});
+			}
+
+			group_umpires.forEach(u => render_tile(list, u));
 		});
 	});
 }

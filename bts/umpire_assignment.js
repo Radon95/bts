@@ -25,6 +25,7 @@ function _calculate_stats(umpires, matches) {
 		u.last_role = null;
 		u.on_court_match_id = null;
 		u.on_court_court_id = null;
+		u.on_court_role = null;
 		u.on_court_match_score = null;
 		u.on_court_match_start_ts = null;
 		umpires_by_id.set(u._id, u);
@@ -53,6 +54,7 @@ function _calculate_stats(umpires, matches) {
 			} else if (m.setup.court_id && m.setup.now_on_court) {
 				u.on_court_match_id = m._id;
 				u.on_court_court_id = m.setup.court_id;
+				u.on_court_role = role;
 				u.on_court_match_score = m.network_score;
 				if (m.presses && m.presses.length > 0) {
 					u.on_court_match_start_ts = m.presses[0].timestamp;
