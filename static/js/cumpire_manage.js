@@ -53,47 +53,51 @@ function ui_options() {
 
 	uiu.el(dlg, 'h2', {}, ci18n('umpire_manage:options'));
 
-	const tracking_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const tracking_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	const tracking_cb = uiu.el(tracking_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.umpire_tracking_enabled) tracking_cb.checked = true;
 	uiu.el(tracking_label, 'span', {}, ' ' + ci18n('umpire_manage:tracking_enabled'));
 
-	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 20px;'});
 	const assignment_cb = uiu.el(assignment_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.umpire_assignment_enabled) assignment_cb.checked = true;
 	uiu.el(assignment_label, 'span', {}, ' ' + ci18n('umpire_manage:assignment_enabled'));
 
-	const sj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const sj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 40px;'});
 	const sj_cb = uiu.el(sj_label, 'input', {
 		type: 'checkbox',
 	});
 	if (curt.service_judge_assignment_enabled) sj_cb.checked = true;
-	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled'));
+	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled') + ' ' + ci18n('experimental'));
 
-	const directions = ['bottom', 'left', 'right'];
+	const directions = ['bottom', 'top', 'left', 'right'];
 
-	const pause_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const pause_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	uiu.el(pause_dir_label, 'span', {}, ci18n('umpire_manage:pause_slide_direction') + ': ');
 	const pause_dir_select = uiu.el(pause_dir_label, 'select');
 	directions.forEach(dir => {
-		uiu.el(pause_dir_select, 'option', {
+		const opt = uiu.el(pause_dir_select, 'option', {
 			value: dir,
-			selected: (curt.umpire_manage_pause_direction || 'bottom') === dir ? 'selected' : undefined,
 		}, ci18n(`umpire_manage:direction:${dir}`));
+		if ((curt.umpire_manage_pause_direction || 'bottom') === dir) {
+			opt.selected = true;
+		}
 	});
 
-	const away_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px;'});
+	const away_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
 	uiu.el(away_dir_label, 'span', {}, ci18n('umpire_manage:away_slide_direction') + ': ');
 	const away_dir_select = uiu.el(away_dir_label, 'select');
 	directions.forEach(dir => {
-		uiu.el(away_dir_select, 'option', {
+		const opt = uiu.el(away_dir_select, 'option', {
 			value: dir,
-			selected: (curt.umpire_manage_away_direction || 'bottom') === dir ? 'selected' : undefined,
 		}, ci18n(`umpire_manage:direction:${dir}`));
+		if ((curt.umpire_manage_away_direction || 'bottom') === dir) {
+			opt.selected = true;
+		}
 	});
 
 	function update_disabled() {
@@ -234,14 +238,15 @@ function ui_render() {
 			}
 
 			if (is_slid_out) {
-				group.dataset.direction = slide_config[status.id].direction;
-				const other_slid_out = statuses.find(s => s.slidable && s.id !== status.id && !slide_config[s.id].is_pinned && slide_config[s.id].direction === slide_config[status.id].direction);
+				const dir = slide_config[status.id].direction;
+				group.dataset.direction = dir;
+				const other_slid_out = statuses.find(s => s.slidable && s.id !== status.id && !slide_config[s.id].is_pinned && slide_config[s.id].direction === dir);
 				if (other_slid_out) {
 					const is_first = status.id === 'paused';
-					if (slide_config[status.id].direction === 'bottom') {
-						group.style.left = is_first ? 'calc(50% - 160px)' : 'calc(50% + 160px)';
+					if (dir === 'bottom' || dir === 'top') {
+						group.style.left = is_first ? 'calc(50% - 170px)' : 'calc(50% + 170px)';
 					} else {
-						group.style.top = is_first ? 'calc(50% - 100px)' : 'calc(50% + 100px)';
+						group.style.top = is_first ? 'calc(50% - 170px)' : 'calc(50% + 170px)';
 					}
 				}
 			}
@@ -321,6 +326,9 @@ function ui_render() {
 				tile.addEventListener('dragstart', (e) => {
 					e.dataTransfer.setData('umpire_id', u._id);
 					e.dataTransfer.effectAllowed = 'move';
+					if (e.dataTransfer.setDragImage) {
+						e.dataTransfer.setDragImage(tile, 0, 0);
+					}
 					// Ensure only the tile is dragged, not surrounding content
 					e.stopPropagation();
 				});
