@@ -414,15 +414,17 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:priority', {score: Math.round(u.priority_score / 60000)}));
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:last_match', {time: (u.last_match_end_ts ? utils.time_str(u.last_match_end_ts) : 'N/A')}));
 				} else if (u.calculated_status === 'oncourt') {
-					if (u.on_court_match_start_ts) {
-						const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
-					} else {
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:not_started'));
-					}
-					if (u.on_court_match_score) {
-						const score_str = u.on_court_match_score.map(s => s[0] + '-' + s[1]).join(' ');
-						uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:score', {score: score_str}));
+					if (!is_sj) {
+						if (u.on_court_match_start_ts) {
+							const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
+						} else {
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:not_started'));
+						}
+						if (u.on_court_match_score) {
+							const score_str = u.on_court_match_score.map(s => s[0] + '-' + s[1]).join(' ');
+							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:score', {score: score_str}));
+						}
 					}
 				} else if (u.calculated_status === 'paused') {
 					const pause_duration = Math.round((Date.now() - u.paused_since_ts) / 60000);

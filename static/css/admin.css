@@ -200,7 +200,6 @@ table.striped-table {
 }
 
 .umpire_oncourt_container {
-    padding: 10px;
     overflow-y: auto;
     flex: 1;
 }
@@ -208,7 +207,10 @@ table.striped-table {
 .umpire_court_section {
     display: flex;
     align-items: stretch;
-    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+}
+.umpire_court_section:last-child {
+    border-bottom: none;
 }
 
 .umpire_court_label {
@@ -220,22 +222,29 @@ table.striped-table {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border-radius: 4px 0 0 4px;
-    margin-right: 10px;
+    margin-right: 0;
 }
 
 .umpire_court_umpires {
     flex: 1;
+    padding: 0;
 }
 
-.umpire_tile_sj {
-    margin-top: -11px;
-    border-style: dashed;
-    opacity: 0.9;
+.umpire_oncourt_container .umpire_tile {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 15px;
 }
 
-.umpire_tile_with_sj {
-    margin-bottom: 0;
+.umpire_oncourt_container .umpire_tile_sj {
+    padding-top: 0;
+    opacity: 0.8;
+}
+
+.umpire_oncourt_container .umpire_tile_with_sj {
+    padding-bottom: 2px;
 }
 
 .umpire_tile {
