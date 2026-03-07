@@ -60,6 +60,8 @@ function handle_tournament_edit_props(app, ws, msg) {
 		'language', 'dm_style',
 		'logo_background_color', 'logo_foreground_color',
 		'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled',
+		'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
+		'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
 	]);
 
 	if (msg.props.btp_timezone) {
