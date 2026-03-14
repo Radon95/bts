@@ -44,7 +44,7 @@ function default_handler_func(rerender, special_funcs, c) {
 			'btp_timezone', 'btp_enabled', 'btp_autofetch_enabled', 'btp_autofetch_interval',
 			'btp_readonly', 'btp_sync_intermediate', 'btp_ip', 'btp_password',
 			'ticker_enabled', 'ticker_url', 'ticker_password', 'logo_id',
-			'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled',
+			'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled', 'line_judge_assignment_enabled',
 			'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
 			'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
 		];
@@ -102,6 +102,9 @@ function default_handler_func(rerender, special_funcs, c) {
 		const changed_m = utils.find(curt.matches, m => m._id === c.val.match__id);
 		if (changed_m) {
 			changed_m.setup = c.val.setup;
+			if (c.val.line_judges !== undefined) {
+				changed_m.line_judges = c.val.line_judges;
+			}
 		} else {
 			cerror.silent('Cannot find edited match ' + c.val.match__id);
 		}

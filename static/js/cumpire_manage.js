@@ -75,6 +75,13 @@ function ui_options() {
 	if (curt.service_judge_assignment_enabled) sj_cb.checked = true;
 	uiu.el(sj_label, 'span', {}, ' ' + ci18n('umpire_manage:sj_assignment_enabled') + ' (' + ci18n('experimental') + ')');
 
+	const lj_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 20px;'});
+	const lj_cb = uiu.el(lj_label, 'input', {
+		type: 'checkbox',
+	});
+	if (curt.line_judge_assignment_enabled) lj_cb.checked = true;
+	uiu.el(lj_label, 'span', {}, ' ' + ci18n('umpire_manage:lj_assignment_enabled'));
+
 	const directions = ['bottom', 'top', 'left', 'right'];
 
 	const pause_dir_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left;'});
@@ -170,9 +177,11 @@ function ui_options() {
 		if (!tracking_cb.checked) {
 			assignment_cb.disabled = true;
 			sj_cb.disabled = true;
+			lj_cb.disabled = true;
 		} else {
 			assignment_cb.disabled = false;
 			sj_cb.disabled = !assignment_cb.checked;
+			lj_cb.disabled = false;
 		}
 	}
 	update_disabled();
@@ -190,6 +199,7 @@ function ui_options() {
 			umpire_tracking_enabled: tracking_cb.checked,
 			umpire_assignment_enabled: (tracking_cb.checked && assignment_cb.checked),
 			service_judge_assignment_enabled: (tracking_cb.checked && assignment_cb.checked && sj_cb.checked),
+			line_judge_assignment_enabled: (tracking_cb.checked && lj_cb.checked),
 			umpire_manage_pause_direction: pause_dir_select.value,
 			umpire_manage_away_direction: away_dir_select.value,
 			umpire_assignment_upcoming_penalty_1_threshold: p1_ctrls.get_threshold(),
@@ -336,12 +346,53 @@ function ui_render() {
 					const court_umpires = group_umpires.filter(u => (u.on_court_court_id === court._id) || (u.on_court_court_id === court.num));
 					const umpire = court_umpires.find(u => u.on_court_role === 'umpire');
 					const sj = court_umpires.find(u => u.on_court_role === 'service_judge');
+					const ljs = court_umpires.filter(u => u.on_court_role === 'line_judge');
 
 					if (umpire) {
 						render_tile(court_umpires_container, umpire, false, !!sj);
 					}
 					if (sj) {
 						render_tile(court_umpires_container, sj, true);
+					}
+					ljs.forEach(lj => {
+						render_tile(court_umpires_container, lj, false, false, true);
+					});
+
+					if (curt.line_judge_assignment_enabled && umpire) {
+						section.classList.add('umpire_court_section_lj_target');
+						section.addEventListener('dragover', (e) => {
+							e.preventDefault();
+							e.dataTransfer.dropEffect = 'move';
+							section.classList.add('umpire_court_section_active');
+						});
+						section.addEventListener('dragleave', () => {
+							section.classList.remove('umpire_court_section_active');
+						});
+						section.addEventListener('drop', (e) => {
+							e.preventDefault();
+							section.classList.remove('umpire_court_section_active');
+							const umpire_id = e.dataTransfer.getData('umpire_id');
+							const match_id = umpire.on_court_match_id;
+
+							// If we're already a line judge on this court, do nothing
+							if (ljs.find(u => u._id === umpire_id)) return;
+
+							const match = curt.matches.find(m => m._id === match_id);
+							if (!match) return;
+							const line_judges = (match.line_judges || []).slice();
+							if (!line_judges.includes(umpire_id)) {
+								line_judges.push(umpire_id);
+								send({
+									type: 'match_set_line_judges',
+									tournament_key: curt.key,
+									match_id: match_id,
+									line_judges: line_judges,
+								}, (err) => {
+									if (err) return cerror.net(err);
+									ui_render();
+								});
+							}
+						});
 					}
 				});
 				return;
@@ -395,6 +446,36 @@ function ui_render() {
 
 				if (new_status === 'oncourt') return; // Cannot manually move to oncourt
 
+				const u = umpires.find(u => u._id === umpire_id);
+				if (u && u.on_court_role === 'line_judge') {
+					// Remove from line judges
+					const match = curt.matches.find(m => m._id === u.on_court_match_id);
+					if (!match) return;
+					const line_judges = (match.line_judges || []).filter(id => id !== umpire_id);
+					send({
+						type: 'match_set_line_judges',
+						tournament_key: curt.key,
+						match_id: u.on_court_match_id,
+						line_judges: line_judges,
+					}, (err) => {
+						if (err) return cerror.net(err);
+						// Also set status
+						send({
+							type: 'umpire_edit_props',
+							tournament_key: curt.key,
+							id: umpire_id,
+							props: {
+								status: (new_status === 'ready' ? null : new_status),
+								paused_since_ts: (new_status === 'paused' ? Date.now() : null),
+							}
+						}, (err) => {
+							if (err) return cerror.net(err);
+							ui_render();
+						});
+					});
+					return;
+				}
+
 				send({
 					type: 'umpire_edit_props',
 					tournament_key: curt.key,
@@ -409,10 +490,11 @@ function ui_render() {
 				});
 			});
 
-			function render_tile(container, u, is_sj, has_sj) {
+			function render_tile(container, u, is_sj, has_sj, is_lj) {
+				const is_draggable = (u.calculated_status !== 'oncourt') || (is_lj && curt.line_judge_assignment_enabled);
 				const tile = uiu.el(container, 'div', {
-					'class': 'umpire_tile' + (is_sj ? ' umpire_tile_sj' : '') + (has_sj ? ' umpire_tile_with_sj' : ''),
-					draggable: (u.calculated_status !== 'oncourt' ? 'true' : 'false'),
+					'class': 'umpire_tile' + (is_sj ? ' umpire_tile_sj' : '') + (has_sj ? ' umpire_tile_with_sj' : '') + (is_lj ? ' umpire_tile_lj' : ''),
+					draggable: (is_draggable ? 'true' : 'false'),
 				});
 				tile.dataset.umpireId = u._id;
 
@@ -451,7 +533,10 @@ function ui_render() {
 				});
 
 				const name_div = uiu.el(tile, 'div', 'umpire_tile_name');
-				uiu.text(name_div, u.name + (is_sj ? ' (SJ)' : ''));
+				let label = u.name;
+				if (is_sj) label += ' (SJ)';
+				else if (is_lj) label += ' (LJ)';
+				uiu.text(name_div, label);
 
 				const options_btn = uiu.el(tile, 'div', 'umpire_tile_options', '⋮');
 				options_btn.addEventListener('click', (e) => {
@@ -463,7 +548,7 @@ function ui_render() {
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:priority', {score: Math.round(u.priority_score / 60000)}));
 					uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:last_match', {time: (u.last_match_end_ts ? utils.time_str(u.last_match_end_ts) : 'N/A')}));
 				} else if (u.calculated_status === 'oncourt') {
-					if (!is_sj) {
+					if (!is_sj && !is_lj) {
 						if (u.on_court_match_start_ts) {
 							const duration = Math.round((Date.now() - u.on_court_match_start_ts) / 60000);
 							uiu.el(tile, 'div', 'umpire_tile_info', ci18n('umpire_manage:info:duration', {minutes: duration}));
