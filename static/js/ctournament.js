@@ -395,78 +395,65 @@ function ui_edit() {
 	// BTP
 	const btp_fieldset = uiu.el(form, 'fieldset');
 	const btp_enabled_label = uiu.el(btp_fieldset, 'label');
-	const ba_attrs = {
+	const btp_enabled_input = uiu.el(btp_enabled_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_enabled',
-	};
-	if (curt.btp_enabled) {
-		ba_attrs.checked = 'checked';
-	}
-	uiu.el(btp_enabled_label, 'input', ba_attrs);
+	});
+	btp_enabled_input.checked = !!curt.btp_enabled;
 	uiu.el(btp_enabled_label, 'span', {}, ci18n('tournament:edit:btp:enabled'));
 
-	const btp_autofetch_enabled_label = uiu.el(btp_fieldset, 'label');
-	const bae_attrs = {
+	const btp_autofetch_enabled_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
+	const btp_autofetch_enabled_input = uiu.el(btp_autofetch_enabled_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_autofetch_enabled',
-	};
-	if (curt.btp_autofetch_enabled) {
-		bae_attrs.checked = 'checked';
-	}
-	uiu.el(btp_autofetch_enabled_label, 'input', bae_attrs);
+	});
+	btp_autofetch_enabled_input.checked = !!curt.btp_autofetch_enabled;
 	uiu.el(btp_autofetch_enabled_label, 'span', {}, ci18n('tournament:edit:btp:autofetch_enabled'));
 
-	const btp_readonly_label = uiu.el(btp_fieldset, 'label');
-	const bro_attrs = {
+	const btp_autofetch_interval_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 40px;'});
+	uiu.el(btp_autofetch_interval_label, 'span', {}, ci18n('tournament:edit:btp:autofetch_interval'));
+	const btp_autofetch_interval_input = uiu.el(btp_autofetch_interval_label, 'input', {
+		type: 'number',
+		name: 'btp_autofetch_interval',
+		min: 1,
+		value: (curt.btp_autofetch_interval ? Math.round(curt.btp_autofetch_interval / 1000) : 30),
+	});
+	uiu.el(btp_autofetch_interval_label, 'span', {style: 'font-size: 0.8em; margin-left: 0.5em;'}, ci18n('tournament:edit:btp:autofetch_interval:note'));
+
+	const btp_readonly_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
+	const btp_readonly_input = uiu.el(btp_readonly_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_readonly',
-	};
-	if (curt.btp_readonly) {
-		bro_attrs.checked = 'checked';
-	}
-	const btp_readonly_input = uiu.el(btp_readonly_label, 'input', bro_attrs);
+	});
+	btp_readonly_input.checked = !!curt.btp_readonly;
 	uiu.el(btp_readonly_label, 'span', {}, ci18n('tournament:edit:btp:readonly'));
 
-	const btp_sync_intermediate_label = uiu.el(btp_fieldset, 'label');
-	const bsi_attrs = {
+	const btp_sync_intermediate_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 40px;'});
+	const btp_sync_intermediate_input = uiu.el(btp_sync_intermediate_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_sync_intermediate',
-	};
-	if (curt.btp_sync_intermediate) {
-		bsi_attrs.checked = 'checked';
-	}
-	if (curt.btp_readonly) {
-		bsi_attrs.disabled = 'disabled';
-	}
-	const btp_sync_intermediate_input = uiu.el(btp_sync_intermediate_label, 'input', bsi_attrs);
+	});
+	btp_sync_intermediate_input.checked = !!curt.btp_sync_intermediate;
 	uiu.el(btp_sync_intermediate_label, 'span', {}, ci18n('tournament:edit:btp:sync_intermediate'));
 
-	btp_readonly_input.addEventListener('change', () => {
-		if (btp_readonly_input.checked) {
-			btp_sync_intermediate_input.setAttribute('disabled', 'disabled');
-		} else {
-			btp_sync_intermediate_input.removeAttribute('disabled');
-		}
-	});
-
-	const btp_ip_label = uiu.el(btp_fieldset, 'label');
+	const btp_ip_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
 	uiu.el(btp_ip_label, 'span', {}, ci18n('tournament:edit:btp:ip'));
-	uiu.el(btp_ip_label, 'input', {
+	const btp_ip_input = uiu.el(btp_ip_label, 'input', {
 		type: 'text',
 		name: 'btp_ip',
 		value: (curt.btp_ip || ''),
 	});
 
-	const btp_password_label = uiu.el(btp_fieldset, 'label');
+	const btp_password_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
 	uiu.el(btp_password_label, 'span', {}, ci18n('tournament:edit:btp:password'));
-	uiu.el(btp_password_label, 'input', {
+	const btp_password_input = uiu.el(btp_password_label, 'input', {
 		type: 'text',
 		name: 'btp_password',
 		value: (curt.btp_password || ''),
 	});
 
 	// BTP timezone
-	const btp_timezone_label = uiu.el(btp_fieldset, 'label');
+	const btp_timezone_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
 	uiu.el(btp_timezone_label, 'span', {}, ci18n('tournament:edit:btp:timezone'));
 	const btp_timezone_select = uiu.el(btp_timezone_label, 'select', {
 		name: 'btp_timezone',
@@ -487,6 +474,37 @@ function ui_edit() {
 
 		uiu.el(btp_timezone_select, 'option', attrs, tz);
 	}
+
+	function update_btp_disabled() {
+		const btp_enabled = btp_enabled_input.checked;
+		const autofetch_enabled = btp_autofetch_enabled_input.checked;
+		const readonly_enabled = btp_readonly_input.checked;
+
+		const all_btp_labels = btp_fieldset.querySelectorAll('label');
+		for (let i = 0;i < all_btp_labels.length;i++) {
+			const label = all_btp_labels[i];
+			const input = label.querySelector('input,select');
+			if (input === btp_enabled_input) continue;
+
+			let disabled = !btp_enabled;
+			if (input === btp_autofetch_interval_input) {
+				disabled = disabled || !autofetch_enabled;
+			} else if (input === btp_sync_intermediate_input) {
+				disabled = disabled || readonly_enabled;
+			}
+
+			input.disabled = disabled;
+			label.style.color = disabled ? '#888' : '';
+			if (input.tagName.toUpperCase() === 'INPUT' || input.tagName.toUpperCase() === 'SELECT') {
+				input.style.color = disabled ? '#888' : '';
+			}
+		}
+	}
+	btp_enabled_input.addEventListener('change', update_btp_disabled);
+	btp_autofetch_enabled_input.addEventListener('change', update_btp_disabled);
+	btp_readonly_input.addEventListener('change', update_btp_disabled);
+	form.update_btp_disabled = update_btp_disabled;
+	update_btp_disabled();
 
 	// Ticker
 	const ticker_fieldset = uiu.el(form, 'fieldset');
@@ -524,22 +542,26 @@ function ui_edit() {
 		const props = {
 			name: data.name,
 			language: data.language,
-			is_team: (!!data.is_team),
-			is_nation_competition: (!!data.is_nation_competition),
-			only_now_on_court: (!!data.only_now_on_court),
-			btp_enabled: (!!data.btp_enabled),
-			btp_autofetch_enabled: (!!data.btp_autofetch_enabled),
-			btp_readonly: (!!data.btp_readonly),
-			btp_sync_intermediate: (!!data.btp_sync_intermediate),
+			is_team: (data.is_team === 'on'),
+			is_nation_competition: (data.is_nation_competition === 'on'),
+			only_now_on_court: (data.only_now_on_court === 'on'),
+			btp_enabled: (data.btp_enabled === 'on'),
+			btp_autofetch_enabled: (data.btp_autofetch_enabled === 'on'),
+			btp_readonly: (data.btp_readonly === 'on'),
+			btp_sync_intermediate: (data.btp_sync_intermediate === 'on'),
 			btp_ip: data.btp_ip,
 			btp_password: data.btp_password,
 			btp_timezone: data.btp_timezone,
 			counting: data.counting,
 			dm_style: data.dm_style,
-			ticker_enabled: (!! data.ticker_enabled),
+			ticker_enabled: (data.ticker_enabled === 'on'),
 			ticker_url: data.ticker_url,
 			ticker_password: data.ticker_password,
 		};
+		const interval_val = parseInt(data.btp_autofetch_interval);
+		if (!isNaN(interval_val)) {
+			props.btp_autofetch_interval = interval_val * 1000;
+		}
 		send({
 			type: 'tournament_edit_props',
 			key: curt.key,

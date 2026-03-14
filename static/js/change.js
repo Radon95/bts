@@ -39,30 +39,31 @@ function default_handler_func(rerender, special_funcs, c) {
 
 	switch (c.ctype) {
 	case 'props': {
-		curt.name = c.val.name;
-		curt.is_team = c.val.is_team;
-		curt.is_nation_competition = c.val.is_nation_competition;
-		curt.only_now_on_court = c.val.only_now_on_court;
-		curt.btp_timezone = c.val.btp_timezone;
-		curt.btp_enabled = c.val.btp_enabled;
-		curt.btp_autofetch_enabled = c.val.btp_autofetch_enabled;
-		curt.btp_readonly = c.val.btp_readonly;
-		curt.btp_ip = c.val.btp_ip;
-		curt.ticker_enabled = c.val.ticker_enabled;
-		curt.ticker_url = c.val.ticker_url;
-		curt.ticker_password = c.val.ticker_password;
-		curt.logo_id = c.val.logo_id;
+		const props = [
+			'name', 'is_team', 'is_nation_competition', 'only_now_on_court',
+			'btp_timezone', 'btp_enabled', 'btp_autofetch_enabled', 'btp_autofetch_interval',
+			'btp_readonly', 'btp_sync_intermediate', 'btp_ip', 'btp_password',
+			'ticker_enabled', 'ticker_url', 'ticker_password', 'logo_id',
+			'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled',
+			'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
+			'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
+		];
+		for (const k of props) {
+			if (c.val[k] !== undefined) {
+				curt[k] = c.val[k];
+			}
+		}
 
 		uiu.qsEach('.ct_name', function(el) {
 			if (el.tagName.toUpperCase() === 'INPUT') {
-				el.value = c.val.name;
+				el.value = curt.name;
 			} else {
-				uiu.text(el, c.val.name);
+				uiu.text(el, curt.name);
 			}
 		});
 		const CHECKBOXES = [
 			'is_team', 'is_nation_competition', 'only_now_on_court',
-			'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly',
+			'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly', 'btp_sync_intermediate',
 			'ticker_enabled'];
 		for (const cb_name of CHECKBOXES) {
 			uiu.qsEach('input[name="' + cb_name + '"]', function(el) {
@@ -70,15 +71,26 @@ function default_handler_func(rerender, special_funcs, c) {
 			});
 		}
 		uiu.qsEach('input[name="btp_ip"]', function(el) {
-			el.value = curt.btp_ip;
+			el.value = curt.btp_ip || '';
+		});
+		uiu.qsEach('input[name="btp_password"]', function(el) {
+			el.value = curt.btp_password || '';
+		});
+		uiu.qsEach('input[name="btp_autofetch_interval"]', function(el) {
+			el.value = curt.btp_autofetch_interval ? Math.round(curt.btp_autofetch_interval / 1000) : 30;
 		});
 
 		uiu.qsEach('input[name="ticker_url"]', function(el) {
-			el.value = curt.ticker_url;
+			el.value = curt.ticker_url || '';
 		});
 		uiu.qsEach('input[name="ticker_password"]', function(el) {
-			el.value = curt.ticker_password;
+			el.value = curt.ticker_password || '';
 		});
+
+		if (crouting.get_vpath() === `t/${curt.key}/edit`) {
+			const update_func = uiu.qs('form.tournament_settings').update_btp_disabled;
+			if (update_func) update_func();
+		}
 
 		break;}
 	case 'match_add':

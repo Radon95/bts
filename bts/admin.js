@@ -53,8 +53,8 @@ function handle_tournament_edit_props(app, ws, msg) {
 	const key = msg.key;
 	const props = utils.pluck(msg.props, [
 		'name',
-		'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly', 'btp_sync_intermediate',
-		'btp_ip', 'btp_password',
+		'btp_enabled', 'btp_autofetch_enabled', 'btp_autofetch_interval', 'btp_readonly', 'btp_sync_intermediate',
+		'btp_ip', 'btp_password', 'btp_timezone',
 		'is_team', 'is_nation_competition', 'only_now_on_court', 'counting',
 		'ticker_enabled', 'ticker_url', 'ticker_password',
 		'language', 'dm_style',
@@ -161,6 +161,15 @@ function handle_create_tournament(app, ws, msg) {
 	const t = {
 		key: msg.key,
 		only_now_on_court: true,
+		btp_enabled: false,
+		btp_autofetch_enabled: false,
+		btp_autofetch_interval: 30000,
+		btp_readonly: false,
+		btp_sync_intermediate: false,
+		ticker_enabled: false,
+		umpire_tracking_enabled: false,
+		umpire_assignment_enabled: false,
+		service_judge_assignment_enabled: false,
 	};
 
 	app.db.tournaments.insert(t, function(err) {

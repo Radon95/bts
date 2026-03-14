@@ -69,7 +69,7 @@ function send_request(ip, port, xml_req, timeZone, callback) {
 
 
 class BTPConn {
-	constructor(app, ip, password, tkey, enabled_autofetch, readonly, sync_intermediate, is_team, timeZone) {
+	constructor(app, ip, password, tkey, enabled_autofetch, readonly, sync_intermediate, is_team, timeZone, autofetch_interval) {
 		this.app = app;
 		this.last_status = 'Activated';
 		this.ip = ip;
@@ -79,6 +79,7 @@ class BTPConn {
 		this.terminated = false;
 		this.enabled_autofetch = enabled_autofetch;
 		this.autofetch_timeout = null;
+		this.autofetch_interval = autofetch_interval || 30000;
 		this.readonly = readonly;
 		this.sync_intermediate = sync_intermediate;
 		this.is_team = is_team;
@@ -138,7 +139,7 @@ class BTPConn {
 		this.autofetch_timeout = setTimeout(() => {
 			this.fetch();
 			this.schedule_fetch();
-		}, AUTOFETCH_TIMEOUT);
+		}, this.autofetch_interval);
 	}
 
 	terminate() {

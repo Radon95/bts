@@ -57,8 +57,9 @@ function ui_options() {
 	const tracking_cb = uiu.el(tracking_label, 'input', {
 		type: 'checkbox',
 	});
-	if (curt.umpire_tracking_enabled) tracking_cb.checked = true;
+	tracking_cb.checked = !!curt.umpire_tracking_enabled;
 	uiu.el(tracking_label, 'span', {}, ' ' + ci18n('umpire_manage:tracking_enabled'));
+	uiu.el(tracking_label, 'span', {style: 'font-size: 0.8em; margin-left: 0.5em;'}, ci18n('umpire_manage:tracking_enabled:note'));
 
 	const assignment_label = uiu.el(dlg, 'label', {style: 'display: block; margin-bottom: 10px; text-align: left; margin-left: 20px;'});
 	const assignment_cb = uiu.el(assignment_label, 'input', {
