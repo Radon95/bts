@@ -823,8 +823,8 @@ function show_call_notification(match) {
 	if (lifetime && lifetime > 0) {
 		setTimeout(() => {
 			if (notification.parentNode) {
-				uiu.fadeout(notification, 500);
-				setTimeout(close, 550);
+				uiu.fadeout(notification, 4000);
+				setTimeout(close, 4050);
 			}
 		}, lifetime * 1000);
 	}
@@ -833,12 +833,12 @@ function show_call_notification(match) {
 function dismiss_match_notifications(match_id) {
 	const notifications = document.querySelectorAll(`.umpire_call_notification[data-match-id="${match_id}"]`);
 	notifications.forEach(n => {
-		uiu.fadeout(n, 500);
+		uiu.fadeout(n, 4000);
 		setTimeout(() => {
 			if (n.parentNode) {
 				uiu.remove(n);
 			}
-		}, 550);
+		}, 4050);
 	});
 }
 
