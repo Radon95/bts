@@ -86,12 +86,6 @@ function sort_matches(matches) {
 		if (a.match_order !== b.match_order) {
 			return (a.match_order || 0) - (b.match_order || 0);
 		}
-		if (a.setup.scheduled_date !== b.setup.scheduled_date) {
-			return (a.setup.scheduled_date || '').localeCompare(b.setup.scheduled_date || '');
-		}
-		if (a.setup.scheduled_time_str !== b.setup.scheduled_time_str) {
-			return (a.setup.scheduled_time_str || '').localeCompare(b.setup.scheduled_time_str || '');
-		}
 		return (a.setup.match_num || 0) - (b.setup.match_num || 0);
 	});
 }
