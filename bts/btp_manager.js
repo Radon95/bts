@@ -60,12 +60,14 @@ function init(app, cb) {
 		if (err) return cb(err);
 
 		for (const t of tournaments) {
-			if (t.btp_autofetch_interval === undefined) {
-				t.btp_autofetch_interval = 30000;
-				app.db.tournaments.update({_id: t._id}, {$set: {btp_autofetch_interval: 30000}}, (err) => {
-					if (err) serror.silent('Failed to set default btp_autofetch_interval: ' + err.message);
-				});
-			}
+			t.btp_autofetch_interval = 30000;
+			t.umpire_tracking_enabled = false;
+			app.db.tournaments.update({_id: t._id}, {$set: {
+				btp_autofetch_interval: 30000,
+				umpire_tracking_enabled: false,
+			}}, (err) => {
+				if (err) serror.silent('Failed to reset tournament properties on startup: ' + err.message);
+			});
 			reconfigure(app, t);
 		}
 		cb();

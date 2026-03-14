@@ -418,6 +418,7 @@ function ui_edit() {
 		min: 1,
 		value: (curt.btp_autofetch_interval ? Math.round(curt.btp_autofetch_interval / 1000) : 30),
 	});
+	uiu.el(btp_autofetch_interval_label, 'span', {style: 'font-size: 0.8em; margin-left: 0.5em;'}, ci18n('tournament:edit:btp:autofetch_interval:note'));
 
 	const btp_readonly_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
 	const btp_readonly_input = uiu.el(btp_readonly_label, 'input', {
