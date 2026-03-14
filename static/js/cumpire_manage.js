@@ -689,35 +689,6 @@ function ui_render() {
 	});
 }
 
-crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
-	ctournament.switch_tournament(m[1], function() {
-		ui_show();
-	});
-}, change.default_handler(ui_show));
-
-return {
-	ui_show,
-	ui_render,
-	show_call_notification,
-	dismiss_match_notifications,
-};
-
-})();
-
-/*@DEV*/
-if ((typeof module !== 'undefined') && (typeof require !== 'undefined')) {
-	var ci18n = require('./ci18n.js');
-	var change = require('./change.js');
-	var crouting = require('./crouting.js');
-	var ctournament = require('./ctournament.js');
-	var toprow = require('./toprow.js');
-	var uiu = require('../bup/js/uiu.js');
-	var utils = require('../bup/js/utils.js');
-
-	module.exports = cumpire_manage;
-}
-/*/@DEV*/
-
 function show_call_notification(match) {
 	if (!curt.umpire_manage_call_match_enabled) return;
 
@@ -860,3 +831,32 @@ function dismiss_match_notifications(match_id) {
 		}, 550);
 	});
 }
+
+crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
+	ctournament.switch_tournament(m[1], function() {
+		ui_show();
+	});
+}, change.default_handler(ui_show));
+
+return {
+	ui_show,
+	ui_render,
+	show_call_notification,
+	dismiss_match_notifications,
+};
+
+})();
+
+/*@DEV*/
+if ((typeof module !== 'undefined') && (typeof require !== 'undefined')) {
+	var ci18n = require('./ci18n.js');
+	var change = require('./change.js');
+	var crouting = require('./crouting.js');
+	var ctournament = require('./ctournament.js');
+	var toprow = require('./toprow.js');
+	var uiu = require('../bup/js/uiu.js');
+	var utils = require('../bup/js/utils.js');
+
+	module.exports = cumpire_manage;
+}
+/*/@DEV*/
