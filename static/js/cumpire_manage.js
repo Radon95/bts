@@ -100,6 +100,71 @@ function ui_options() {
 		}
 	});
 
+	function create_penalty_controls(container, index, def_threshold, def_multiplier) {
+		const row = uiu.el(container, 'div', {style: 'margin-bottom: 10px;'});
+		uiu.el(row, 'span', {style: 'display: inline-block; min-width: 100px;'}, ci18n(`umpire_manage:penalty_${index}`));
+
+		const n = (curt.courts ? curt.courts.length : 0);
+
+		const threshold_val = curt[`umpire_assignment_upcoming_penalty_${index}_threshold`] !== undefined ? curt[`umpire_assignment_upcoming_penalty_${index}_threshold`] : def_threshold;
+		const multiplier_val = curt[`umpire_assignment_upcoming_penalty_${index}_multiplier`] !== undefined ? curt[`umpire_assignment_upcoming_penalty_${index}_multiplier`] : def_multiplier;
+
+		uiu.el(row, 'span', {}, ci18n('umpire_manage:threshold') + ': ');
+		const percent_input = uiu.el(row, 'input', {
+			type: 'number',
+			style: 'width: 4em;',
+			value: Math.round(threshold_val * 100),
+		});
+		uiu.el(row, 'span', {}, '% (' + ci18n('umpire_manage:n_courts') + ') = ');
+		const absolute_input = uiu.el(row, 'input', {
+			type: 'number',
+			style: 'width: 4em;',
+			value: Math.round(threshold_val * n),
+		});
+		uiu.el(row, 'span', {}, ' ' + ci18n('umpire_manage:matches'));
+
+		uiu.el(row, 'span', {style: 'margin-left: 20px;'}, ci18n('umpire_manage:multiplier') + ': ');
+		const mult_input = uiu.el(row, 'input', {
+			type: 'number',
+			style: 'width: 4em;',
+			step: '0.1',
+			value: multiplier_val.toFixed(1),
+		});
+		uiu.el(row, 'span', {}, ' / ');
+		const mult_percent_input = uiu.el(row, 'input', {
+			type: 'number',
+			style: 'width: 4em;',
+			value: Math.round(multiplier_val * 100),
+		});
+		uiu.el(row, 'span', {}, '%');
+
+		percent_input.addEventListener('input', () => {
+			const val = parseFloat(percent_input.value) / 100;
+			absolute_input.value = Math.round(val * n);
+		});
+		absolute_input.addEventListener('input', () => {
+			if (n > 0) {
+				percent_input.value = Math.round(parseFloat(absolute_input.value) / n * 100);
+			}
+		});
+		mult_input.addEventListener('input', () => {
+			mult_percent_input.value = Math.round(parseFloat(mult_input.value) * 100);
+		});
+		mult_percent_input.addEventListener('input', () => {
+			mult_input.value = (parseFloat(mult_percent_input.value) / 100).toFixed(1);
+		});
+
+		return {
+			get_threshold: () => parseFloat(percent_input.value) / 100,
+			get_multiplier: () => parseFloat(mult_input.value),
+		};
+	}
+
+	const penalty_container = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: left;'});
+	uiu.el(penalty_container, 'h3', {}, ci18n('umpire_manage:penalties_title'));
+	const p1_ctrls = create_penalty_controls(penalty_container, 1, 1.0, 0.0);
+	const p2_ctrls = create_penalty_controls(penalty_container, 2, 1.5, 0.5);
+
 	function update_disabled() {
 		if (!tracking_cb.checked) {
 			assignment_cb.disabled = true;
@@ -126,6 +191,10 @@ function ui_options() {
 			service_judge_assignment_enabled: (tracking_cb.checked && assignment_cb.checked && sj_cb.checked),
 			umpire_manage_pause_direction: pause_dir_select.value,
 			umpire_manage_away_direction: away_dir_select.value,
+			umpire_assignment_upcoming_penalty_1_threshold: p1_ctrls.get_threshold(),
+			umpire_assignment_upcoming_penalty_1_multiplier: p1_ctrls.get_multiplier(),
+			umpire_assignment_upcoming_penalty_2_threshold: p2_ctrls.get_threshold(),
+			umpire_assignment_upcoming_penalty_2_multiplier: p2_ctrls.get_multiplier(),
 		};
 
 		send({

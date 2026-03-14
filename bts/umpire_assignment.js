@@ -70,6 +70,7 @@ function _calculate_stats(umpires, matches) {
 
 function get_priority(u, now) {
 	const weight = (u.weight !== undefined) ? u.weight : 1.0;
+	const multiplier = (u.upcoming_multiplier !== undefined) ? u.upcoming_multiplier : 1.0;
 	let time_diff;
 	const today_6am = get_today_6am();
 	if (!u.last_match_end_ts || u.last_match_end_ts < today_6am) {
@@ -77,7 +78,58 @@ function get_priority(u, now) {
 	} else {
 		time_diff = now - u.last_match_end_ts;
 	}
-	return time_diff * weight;
+	return time_diff * weight * multiplier;
+}
+
+function sort_matches(matches) {
+	matches.sort((a, b) => {
+		if (a.match_order !== b.match_order) {
+			return (a.match_order || 0) - (b.match_order || 0);
+		}
+		return (a.setup.match_num || 0) - (b.setup.match_num || 0);
+	});
+}
+
+function _calculate_penalties(umpires, matches, tournament, courts) {
+	const n = courts.length;
+	if (n === 0) return;
+
+	const t1 = (tournament.umpire_assignment_upcoming_penalty_1_threshold !== undefined) ? tournament.umpire_assignment_upcoming_penalty_1_threshold : 1.0;
+	const m1 = (tournament.umpire_assignment_upcoming_penalty_1_multiplier !== undefined) ? tournament.umpire_assignment_upcoming_penalty_1_multiplier : 0.0;
+	const t2 = (tournament.umpire_assignment_upcoming_penalty_2_threshold !== undefined) ? tournament.umpire_assignment_upcoming_penalty_2_threshold : 1.5;
+	const m2 = (tournament.umpire_assignment_upcoming_penalty_2_multiplier !== undefined) ? tournament.umpire_assignment_upcoming_penalty_2_multiplier : 0.5;
+
+	const upcoming_matches = matches.filter(m => !m.end_ts && !m.setup.now_on_court);
+	sort_matches(upcoming_matches);
+
+	const umpires_by_id = new Map();
+	const umpires_by_name = new Map();
+	for (const u of umpires) {
+		u.upcoming_multiplier = 1.0;
+		umpires_by_id.set(u._id, u);
+		umpires_by_name.set(u.name, u);
+	}
+
+	upcoming_matches.forEach((m, idx) => {
+		const pos = idx + 1;
+		let multiplier = 1.0;
+		if (pos <= t1 * n) {
+			multiplier = m1;
+		} else if (pos <= t2 * n) {
+			multiplier = m2;
+		} else {
+			return; // No penalty beyond this
+		}
+
+		const process_u = (id, name) => {
+			const u = umpires_by_id.get(id) || umpires_by_name.get(name);
+			if (u && u.upcoming_multiplier > multiplier) {
+				u.upcoming_multiplier = multiplier;
+			}
+		};
+		process_u(m.setup.umpire_id, m.setup.umpire_name);
+		process_u(m.setup.service_judge_id, m.setup.service_judge_name);
+	});
 }
 
 function reassign(app, tournament_key, callback) {
@@ -89,13 +141,15 @@ function reassign(app, tournament_key, callback) {
 		async.parallel({
 			umpires: cb => db.umpires.find({tournament_key}, cb),
 			matches: cb => db.matches.find({tournament_key}, cb),
+			courts: cb => db.courts.find({tournament_key}, cb),
 		}, (err, results) => {
 			if (err) return callback && callback(err);
 
-			const {umpires, matches} = results;
+			const {umpires, matches, courts} = results;
 			const now = Date.now();
 
 			_calculate_stats(umpires, matches);
+			_calculate_penalties(umpires, matches, tournament, courts);
 
 			const unassigned_umpire_matches = [];
 			const unassigned_sj_matches = [];
@@ -115,14 +169,6 @@ function reassign(app, tournament_key, callback) {
 				}
 			}
 
-			const sort_matches = (matches) => {
-				matches.sort((a, b) => {
-					if (a.match_order !== b.match_order) {
-						return (a.match_order || 0) - (b.match_order || 0);
-					}
-					return (a.setup.match_num || 0) - (b.setup.match_num || 0);
-				});
-			};
 			sort_matches(unassigned_umpire_matches);
 			sort_matches(unassigned_sj_matches);
 
@@ -213,11 +259,13 @@ function get_umpires_with_stats(app, tournament_key, callback) {
 		umpires: cb => db.umpires.find({tournament_key}, cb),
 		matches: cb => db.matches.find({tournament_key}, cb),
 		tournament: cb => db.tournaments.findOne({key: tournament_key}, cb),
+		courts: cb => db.courts.find({tournament_key}, cb),
 	}, (err, results) => {
 		if (err) return callback(err);
 
-		const {umpires, matches} = results;
+		const {umpires, matches, tournament, courts} = results;
 		_calculate_stats(umpires, matches);
+		_calculate_penalties(umpires, matches, tournament, courts);
 
 		for (const u of umpires) {
 			if (u.on_court_match_id) {
