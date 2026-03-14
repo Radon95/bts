@@ -62,6 +62,9 @@ function handle_tournament_edit_props(app, ws, msg) {
 		'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled', 'line_judge_assignment_enabled',
 		'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
 		'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
+		'umpire_manage_call_match_enabled', 'umpire_manage_call_match_optional_sj', 'umpire_manage_call_match_optional_lj',
+		'umpire_manage_call_match_corner', 'umpire_manage_call_match_lifetime', 'umpire_manage_call_match_exact_words',
+		'umpire_manage_call_match_language',
 	]);
 
 	if (msg.props.btp_timezone) {

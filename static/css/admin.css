@@ -447,3 +447,92 @@ table.striped-table {
 .umpire_manage_container {
     justify-content: center;
 }
+
+/* Call Notifications */
+.umpire_call_container {
+    position: fixed;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    pointer-events: none;
+    max-width: 400px;
+}
+
+.umpire_call_container_bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.umpire_call_container_bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.umpire_call_container_top-right {
+    top: 0;
+    right: 0;
+    flex-direction: column-reverse;
+}
+
+.umpire_call_container_top-left {
+    top: 0;
+    left: 0;
+    flex-direction: column-reverse;
+}
+
+.umpire_call_notification {
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative;
+    animation: umpire_call_slide_in 0.3s ease-out;
+}
+
+@keyframes umpire_call_slide_in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.umpire_call_close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 24px;
+    color: #999;
+    line-height: 1;
+}
+.umpire_call_notification:hover .umpire_call_close {
+    color: #333;
+}
+
+.umpire_call_info {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 1.1em;
+}
+
+.umpire_call_info li {
+    margin-bottom: 5px;
+}
+
+.umpire_call_info li:nth-child(3) {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.umpire_call_exact {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+    font-style: italic;
+    color: #444;
+    font-size: 0.9em;
+}

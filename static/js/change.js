@@ -19,13 +19,29 @@ function change_score(cval) {
 	m.network_score = cval.network_score;
 	m.presses = cval.presses;
 	m.team1_won = cval.team1_won;
+
+	if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+		if (m.presses && m.presses.length > 0) {
+			cumpire_manage.dismiss_match_notifications(match_id);
+		}
+	}
 }
 
 function change_current_match(cval) {
 	// Do not use courts_by_id since that may not be initialized in all views
 	const court = utils.find(curt.courts, c => c._id === cval.court_id);
 	if (court) {
+		const old_match_id = court.match_id;
 		court.match_id = cval.match_id;
+
+		if (cval.match_id && cval.match_id !== old_match_id) {
+			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+				const m = utils.find(curt.matches, m => m._id === cval.match_id);
+				if (m) {
+					cumpire_manage.show_call_notification(m);
+				}
+			}
+		}
 	} else {
 		cerror.silent('Cannot find court ' + JSON.stringify(cval.court_id));
 	}
