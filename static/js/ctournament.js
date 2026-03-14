@@ -398,16 +398,16 @@ function ui_edit() {
 	const btp_enabled_input = uiu.el(btp_enabled_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_enabled',
-		checked: (curt.btp_enabled ? 'checked' : undefined),
 	});
+	btp_enabled_input.checked = !!curt.btp_enabled;
 	uiu.el(btp_enabled_label, 'span', {}, ci18n('tournament:edit:btp:enabled'));
 
 	const btp_autofetch_enabled_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
 	const btp_autofetch_enabled_input = uiu.el(btp_autofetch_enabled_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_autofetch_enabled',
-		checked: (curt.btp_autofetch_enabled ? 'checked' : undefined),
 	});
+	btp_autofetch_enabled_input.checked = !!curt.btp_autofetch_enabled;
 	uiu.el(btp_autofetch_enabled_label, 'span', {}, ci18n('tournament:edit:btp:autofetch_enabled'));
 
 	const btp_autofetch_interval_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 40px;'});
@@ -423,17 +423,16 @@ function ui_edit() {
 	const btp_readonly_input = uiu.el(btp_readonly_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_readonly',
-		checked: (curt.btp_readonly ? 'checked' : undefined),
 	});
+	btp_readonly_input.checked = !!curt.btp_readonly;
 	uiu.el(btp_readonly_label, 'span', {}, ci18n('tournament:edit:btp:readonly'));
 
 	const btp_sync_intermediate_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 40px;'});
 	const btp_sync_intermediate_input = uiu.el(btp_sync_intermediate_label, 'input', {
 		type: 'checkbox',
 		name: 'btp_sync_intermediate',
-		checked: (curt.btp_sync_intermediate ? 'checked' : undefined),
-		disabled: (curt.btp_readonly ? 'disabled' : undefined),
 	});
+	btp_sync_intermediate_input.checked = !!curt.btp_sync_intermediate;
 	uiu.el(btp_sync_intermediate_label, 'span', {}, ci18n('tournament:edit:btp:sync_intermediate'));
 
 	const btp_ip_label = uiu.el(btp_fieldset, 'label', {style: 'margin-left: 20px;'});
@@ -480,27 +479,30 @@ function ui_edit() {
 		const autofetch_enabled = btp_autofetch_enabled_input.checked;
 		const readonly_enabled = btp_readonly_input.checked;
 
-		if (btp_enabled) {
-			btp_autofetch_enabled_input.removeAttribute('disabled');
-			btp_autofetch_interval_input.disabled = !autofetch_enabled;
-			btp_readonly_input.removeAttribute('disabled');
-			btp_sync_intermediate_input.disabled = (readonly_enabled || !btp_enabled);
-			btp_ip_input.removeAttribute('disabled');
-			btp_password_input.removeAttribute('disabled');
-			btp_timezone_select.removeAttribute('disabled');
-		} else {
-			btp_autofetch_enabled_input.setAttribute('disabled', 'disabled');
-			btp_autofetch_interval_input.setAttribute('disabled', 'disabled');
-			btp_readonly_input.setAttribute('disabled', 'disabled');
-			btp_sync_intermediate_input.setAttribute('disabled', 'disabled');
-			btp_ip_input.setAttribute('disabled', 'disabled');
-			btp_password_input.setAttribute('disabled', 'disabled');
-			btp_timezone_select.setAttribute('disabled', 'disabled');
+		const all_btp_labels = btp_fieldset.querySelectorAll('label');
+		for (let i = 0;i < all_btp_labels.length;i++) {
+			const label = all_btp_labels[i];
+			const input = label.querySelector('input,select');
+			if (input === btp_enabled_input) continue;
+
+			let disabled = !btp_enabled;
+			if (input === btp_autofetch_interval_input) {
+				disabled = disabled || !autofetch_enabled;
+			} else if (input === btp_sync_intermediate_input) {
+				disabled = disabled || readonly_enabled;
+			}
+
+			input.disabled = disabled;
+			label.style.color = disabled ? '#888' : '';
+			if (input.tagName.toUpperCase() === 'INPUT' || input.tagName.toUpperCase() === 'SELECT') {
+				input.style.color = disabled ? '#888' : '';
+			}
 		}
 	}
 	btp_enabled_input.addEventListener('change', update_btp_disabled);
 	btp_autofetch_enabled_input.addEventListener('change', update_btp_disabled);
 	btp_readonly_input.addEventListener('change', update_btp_disabled);
+	form.update_btp_disabled = update_btp_disabled;
 	update_btp_disabled();
 
 	// Ticker
@@ -539,23 +541,26 @@ function ui_edit() {
 		const props = {
 			name: data.name,
 			language: data.language,
-			is_team: (!!data.is_team),
-			is_nation_competition: (!!data.is_nation_competition),
-			only_now_on_court: (!!data.only_now_on_court),
-			btp_enabled: (!!data.btp_enabled),
-			btp_autofetch_enabled: (!!data.btp_autofetch_enabled),
-			btp_autofetch_interval: parseInt(data.btp_autofetch_interval) * 1000,
-			btp_readonly: (!!data.btp_readonly),
-			btp_sync_intermediate: (!!data.btp_sync_intermediate),
+			is_team: (data.is_team === 'on'),
+			is_nation_competition: (data.is_nation_competition === 'on'),
+			only_now_on_court: (data.only_now_on_court === 'on'),
+			btp_enabled: (data.btp_enabled === 'on'),
+			btp_autofetch_enabled: (data.btp_autofetch_enabled === 'on'),
+			btp_readonly: (data.btp_readonly === 'on'),
+			btp_sync_intermediate: (data.btp_sync_intermediate === 'on'),
 			btp_ip: data.btp_ip,
 			btp_password: data.btp_password,
 			btp_timezone: data.btp_timezone,
 			counting: data.counting,
 			dm_style: data.dm_style,
-			ticker_enabled: (!! data.ticker_enabled),
+			ticker_enabled: (data.ticker_enabled === 'on'),
 			ticker_url: data.ticker_url,
 			ticker_password: data.ticker_password,
 		};
+		const interval_val = parseInt(data.btp_autofetch_interval);
+		if (!isNaN(interval_val)) {
+			props.btp_autofetch_interval = interval_val * 1000;
+		}
 		send({
 			type: 'tournament_edit_props',
 			key: curt.key,

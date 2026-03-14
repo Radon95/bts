@@ -163,6 +163,7 @@ function handle_create_tournament(app, ws, msg) {
 		only_now_on_court: true,
 		btp_enabled: false,
 		btp_autofetch_enabled: false,
+		btp_autofetch_interval: 30000,
 		btp_readonly: false,
 		btp_sync_intermediate: false,
 		ticker_enabled: false,

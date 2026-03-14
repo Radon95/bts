@@ -62,7 +62,9 @@ function init(app, cb) {
 		for (const t of tournaments) {
 			if (t.btp_autofetch_interval === undefined) {
 				t.btp_autofetch_interval = 30000;
-				app.db.tournaments.update({_id: t._id}, {$set: {btp_autofetch_interval: 30000}});
+				app.db.tournaments.update({_id: t._id}, {$set: {btp_autofetch_interval: 30000}}, (err) => {
+					if (err) serror.silent('Failed to set default btp_autofetch_interval: ' + err.message);
+				});
 			}
 			reconfigure(app, t);
 		}
