@@ -221,7 +221,7 @@ function ui_options() {
 	const call_enabled_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px;'});
 	const call_enabled_cb = uiu.el(call_enabled_label, 'input', {type: 'checkbox'});
 	call_enabled_cb.checked = !!curt.umpire_manage_call_match_enabled;
-	uiu.el(call_enabled_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:enabled') + ' (' + ci18n('experimental') + ')');
+	uiu.el(call_enabled_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:enabled'));
 
 	const call_sj_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
 	const call_sj_cb = uiu.el(call_sj_label, 'input', {type: 'checkbox'});
@@ -257,7 +257,7 @@ function ui_options() {
 	const read_call_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 40px;'});
 	const read_call_cb = uiu.el(read_call_label, 'input', {type: 'checkbox'});
 	read_call_cb.checked = localStorage.getItem('umpire_manage_call_match_read_call') === 'true';
-	uiu.el(read_call_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:read_call'));
+	uiu.el(read_call_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:read_call') + ' (' + ci18n('experimental') + ')');
 
 	const language_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
 	uiu.el(language_label, 'span', {}, ci18n('umpire_manage:call_match:language') + ': ');
