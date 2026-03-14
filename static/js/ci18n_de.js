@@ -54,6 +54,7 @@ var ci18n_de = {
 'tournament:edit:counting': 'Zählweise:',
 'tournament:edit:btp:enabled': 'BTP-Anbindung aktivieren',
 'tournament:edit:btp:autofetch_enabled': 'Automatisch synchronisieren',
+'tournament:edit:btp:autofetch_interval': 'Intervall (Sekunden):',
 'tournament:edit:btp:readonly': 'Nur lesen',
 'tournament:edit:btp:sync_intermediate': 'Zwischenstand übertragen',
 'tournament:edit:btp:ip': 'IP:',

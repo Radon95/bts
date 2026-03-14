@@ -54,6 +54,7 @@ var ci18n_en = {
 'tournament:edit:counting': 'Scoring system:',
 'tournament:edit:btp:enabled': 'Enable BTP synchronization',
 'tournament:edit:btp:autofetch_enabled': 'Automatic synchronization',
+'tournament:edit:btp:autofetch_interval': 'Interval (seconds):',
 'tournament:edit:btp:readonly': 'Read only',
 'tournament:edit:btp:sync_intermediate': 'Sync intermediate score',
 'tournament:edit:btp:ip': 'IP address:',

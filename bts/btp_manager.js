@@ -23,7 +23,7 @@ function reconfigure(app, t) {
 		t.btp_ip, t.btp_password, t.key,
 		t.btp_autofetch_enabled, t.btp_readonly,
 		t.btp_sync_intermediate,
-		t.is_team, t.btp_timezone);
+		t.is_team, t.btp_timezone, t.btp_autofetch_interval);
 	conns_by_tkey.set(t.key, conn);
 }
 
@@ -60,6 +60,10 @@ function init(app, cb) {
 		if (err) return cb(err);
 
 		for (const t of tournaments) {
+			if (t.btp_autofetch_interval === undefined) {
+				t.btp_autofetch_interval = 30000;
+				app.db.tournaments.update({_id: t._id}, {$set: {btp_autofetch_interval: 30000}});
+			}
 			reconfigure(app, t);
 		}
 		cb();
