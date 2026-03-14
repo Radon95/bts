@@ -682,7 +682,7 @@ function show_call_notification(match) {
 	if (!curt.umpire_manage_call_match_enabled) return;
 
 	const corner = curt.umpire_manage_call_match_corner || 'bottom-right';
-	let container = uiu.qs(`.umpire_call_container_${corner}`);
+	let container = document.querySelector(`.umpire_call_container_${corner}`);
 	if (!container) {
 		container = uiu.el(document.body, 'div', `umpire_call_container umpire_call_container_${corner}`);
 	}
