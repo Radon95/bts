@@ -20,7 +20,7 @@ function change_score(cval) {
 	m.presses = cval.presses;
 	m.team1_won = cval.team1_won;
 
-	if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+	if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
 		if (m.presses && m.presses.length > 0) {
 			cumpire_manage.dismiss_match_notifications(match_id);
 		}
@@ -35,10 +35,10 @@ function change_current_match(cval) {
 		court.match_id = cval.match_id;
 
 		if (cval.match_id && cval.match_id !== old_match_id) {
-			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
+			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
 				const m = utils.find(curt.matches, m => m._id === cval.match_id);
 				if (m) {
-					cumpire_manage.show_call_notification(m);
+					window.setTimeout(() => cumpire_manage.show_call_notification(m), 0);
 				}
 			}
 		}
@@ -110,16 +110,39 @@ function default_handler_func(rerender, special_funcs, c) {
 
 		break;}
 	case 'match_add':
-		curt.matches.push(c.val.match);
+		{
+		const new_m = c.val.match;
+		curt.matches.push(new_m);
+		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
+			const is_on_court = new_m.setup.court_id && (!curt.only_now_on_court || new_m.setup.now_on_court);
+			if (is_on_court) {
+				window.setTimeout(() => cumpire_manage.show_call_notification(new_m), 0);
+			}
+		}
 		rerender();
+		}
 		break;
 	case 'match_edit':
 		{
 		const changed_m = utils.find(curt.matches, m => m._id === c.val.match__id);
 		if (changed_m) {
+			const old_court_id = changed_m.setup.court_id;
+			const old_umpire_id = changed_m.setup.umpire_id;
+			const old_now_on_court = changed_m.setup.now_on_court;
+
 			changed_m.setup = c.val.setup;
 			if (c.val.line_judges !== undefined) {
 				changed_m.line_judges = c.val.line_judges;
+			}
+
+			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
+				const is_on_court = changed_m.setup.court_id && (!curt.only_now_on_court || changed_m.setup.now_on_court);
+				const was_on_court = old_court_id && (!curt.only_now_on_court || old_now_on_court);
+				const umpire_changed = (changed_m.setup.umpire_id || changed_m.setup.umpire_name) !== (old_umpire_id || '');
+
+				if ((is_on_court && !was_on_court) || (is_on_court && umpire_changed)) {
+					window.setTimeout(() => cumpire_manage.show_call_notification(changed_m), 0);
+				}
 			}
 		} else {
 			cerror.silent('Cannot find edited match ' + c.val.match__id);

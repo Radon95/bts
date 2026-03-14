@@ -687,8 +687,13 @@ function show_call_notification(match) {
 		container = uiu.el(document.body, 'div', `umpire_call_container umpire_call_container_${corner}`);
 	}
 
-	const notification = uiu.el(container, 'div', 'umpire_call_notification');
-	notification.dataset.matchId = match._id;
+	let notification = container.querySelector(`.umpire_call_notification[data-match-id="${match._id}"]`);
+	if (notification) {
+		uiu.empty(notification);
+	} else {
+		notification = uiu.el(container, 'div', 'umpire_call_notification');
+		notification.dataset.matchId = match._id;
+	}
 
 	function close() {
 		if (notification.parentNode) {
