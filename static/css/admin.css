@@ -248,6 +248,20 @@ table.striped-table {
     padding-bottom: 4px;
 }
 
+.umpire_oncourt_container .umpire_tile_lj {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    opacity: 0.7;
+    border-top: 1px dashed #eee;
+    font-size: 0.9em;
+}
+
+.umpire_court_section_lj_target.umpire_court_section_active {
+    background-color: #e3f2fd;
+    outline: 2px dashed #2196f3;
+    outline-offset: -2px;
+}
+
 .umpire_tile {
     background: white;
     border: 1px solid #ddd;

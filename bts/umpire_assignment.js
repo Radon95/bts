@@ -28,6 +28,7 @@ function _calculate_stats(umpires, matches) {
 		u.on_court_role = null;
 		u.on_court_match_score = null;
 		u.on_court_match_start_ts = null;
+		u.on_court_line_judges = [];
 		umpires_by_id.set(u._id, u);
 		umpires_by_name.set(u.name, u);
 	}
@@ -64,6 +65,12 @@ function _calculate_stats(umpires, matches) {
 
 		process_umpire(u_id, u_name, 'umpire');
 		process_umpire(sj_id, sj_name, 'service_judge');
+
+		if (m.line_judges) {
+			for (const lj_id of m.line_judges) {
+				process_umpire(lj_id, null, 'line_judge');
+			}
+		}
 	}
 }
 

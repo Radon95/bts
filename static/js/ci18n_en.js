@@ -105,6 +105,7 @@ var ci18n_en = {
 'umpire_manage:tracking_enabled:note': '(resets to off on server restart)',
 'umpire_manage:assignment_enabled': 'Automatic Match Assignment',
 'umpire_manage:sj_assignment_enabled': 'Service Judge Assignment',
+'umpire_manage:lj_assignment_enabled': 'Manual Line Judge tracking',
 'umpire_manage:recalculate': 'Recalculate Stats',
 'umpire_manage:status:ready': 'Available',
 'umpire_manage:status:oncourt': 'On Court',

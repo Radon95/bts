@@ -59,7 +59,7 @@ function handle_tournament_edit_props(app, ws, msg) {
 		'ticker_enabled', 'ticker_url', 'ticker_password',
 		'language', 'dm_style',
 		'logo_background_color', 'logo_foreground_color',
-		'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled',
+		'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled', 'line_judge_assignment_enabled',
 		'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
 		'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
 	]);
@@ -170,6 +170,7 @@ function handle_create_tournament(app, ws, msg) {
 		umpire_tracking_enabled: false,
 		umpire_assignment_enabled: false,
 		service_judge_assignment_enabled: false,
+		line_judge_assignment_enabled: false,
 	};
 
 	app.db.tournaments.insert(t, function(err) {
@@ -283,6 +284,20 @@ function handle_umpire_recalculate(app, ws, msg) {
 	});
 }
 
+function handle_match_set_line_judges(app, ws, msg) {
+	if (!_require_msg(ws, msg, ['tournament_key', 'match_id', 'line_judges'])) {
+		return;
+	}
+
+	app.db.matches.update({_id: msg.match_id, tournament_key: msg.tournament_key}, {$set: {line_judges: msg.line_judges}}, {returnUpdatedDocs: true}, (err, num, match) => {
+		if (err) return ws.respond(msg, err);
+		if (num !== 1) return ws.respond(msg, new Error('Match not found'));
+
+		notify_change(app, msg.tournament_key, 'match_edit', {match__id: msg.match_id, setup: match.setup, line_judges: match.line_judges});
+		ws.respond(msg);
+	});
+}
+
 function handle_match_edit(app, ws, msg) {
 	if (!_require_msg(ws, msg, ['tournament_key', 'id', 'setup'])) {
 		return;
@@ -291,6 +306,9 @@ function handle_match_edit(app, ws, msg) {
 	const setup = _extract_setup(msg.setup);
 	// TODO get old setup, make sure no key has been removed
 	const update = {$set: {setup}};
+	if (msg.line_judges) {
+		update.$set.line_judges = msg.line_judges;
+	}
 	if (msg.btp_update) {
 		update.$set.btp_needsync = true;
 	}
@@ -310,7 +328,7 @@ function handle_match_edit(app, ws, msg) {
 			return;
 		}
 
-		notify_change(app, tournament_key, 'match_edit', {match__id: msg.id, setup});
+		notify_change(app, tournament_key, 'match_edit', {match__id: msg.id, setup, line_judges: changed_match.line_judges});
 		if (msg.btp_update) {
 			btp_manager.update_score(app, changed_match);
 		}
@@ -468,6 +486,7 @@ module.exports = {
 	handle_courts_add,
 	handle_match_add,
 	handle_match_edit,
+	handle_match_set_line_judges,
 	handle_umpire_edit_props,
 	handle_umpire_assignment_get,
 	handle_umpire_recalculate,

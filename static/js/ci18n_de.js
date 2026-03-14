@@ -105,6 +105,7 @@ var ci18n_de = {
 'umpire_manage:tracking_enabled:note': '(wird bei Server-Neustart deaktiviert)',
 'umpire_manage:assignment_enabled': 'Automatische Spiel-Zuweisung',
 'umpire_manage:sj_assignment_enabled': 'Aufschlagrichter-Zuweisung',
+'umpire_manage:lj_assignment_enabled': 'Manuelle Linienrichter-Verfolgung',
 'umpire_manage:recalculate': 'Statistiken neu berechnen',
 'umpire_manage:status:ready': 'Verfügbar',
 'umpire_manage:status:oncourt': 'Auf dem Feld',
