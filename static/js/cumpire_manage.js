@@ -4,11 +4,12 @@ var cumpire_manage = (function() {
 
 let tts_queue = [];
 let tts_speaking = false;
+let tts_match_timeouts = {};
 
 function process_tts_queue() {
 	if (tts_speaking || tts_queue.length === 0) return;
 
-	const { text, lang } = tts_queue.shift();
+	const { text, lang, match_id } = tts_queue.shift();
 	if (!window.speechSynthesis) return;
 
 	tts_speaking = true;
@@ -29,9 +30,18 @@ function process_tts_queue() {
 	window.speechSynthesis.speak(utterance);
 }
 
-function queue_tts(text, lang) {
-	tts_queue.push({ text, lang });
-	process_tts_queue();
+function queue_tts(text, lang, match_id) {
+	if (tts_match_timeouts[match_id]) {
+		clearTimeout(tts_match_timeouts[match_id]);
+	}
+
+	tts_match_timeouts[match_id] = setTimeout(() => {
+		delete tts_match_timeouts[match_id];
+		// Remove existing pending announcements for this match
+		tts_queue = tts_queue.filter(item => item.match_id !== match_id);
+		tts_queue.push({ text, lang, match_id });
+		process_tts_queue();
+	}, 1000); // Wait 1 second to see if more info (like an umpire) is assigned
 }
 
 function ui_show() {
@@ -211,7 +221,7 @@ function ui_options() {
 	const call_enabled_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px;'});
 	const call_enabled_cb = uiu.el(call_enabled_label, 'input', {type: 'checkbox'});
 	call_enabled_cb.checked = !!curt.umpire_manage_call_match_enabled;
-	uiu.el(call_enabled_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:enabled'));
+	uiu.el(call_enabled_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:enabled') + ' (' + ci18n('experimental') + ')');
 
 	const call_sj_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
 	const call_sj_cb = uiu.el(call_sj_label, 'input', {type: 'checkbox'});
@@ -805,7 +815,7 @@ function show_call_notification(match) {
 		uiu.el(notification, 'div', 'umpire_call_exact', exact_words);
 
 		if (localStorage.getItem('umpire_manage_call_match_read_call') === 'true') {
-			queue_tts(exact_words, call_lang);
+			queue_tts(exact_words, call_lang, match._id);
 		}
 	}
 
