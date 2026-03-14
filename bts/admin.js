@@ -161,6 +161,14 @@ function handle_create_tournament(app, ws, msg) {
 	const t = {
 		key: msg.key,
 		only_now_on_court: true,
+		btp_enabled: false,
+		btp_autofetch_enabled: false,
+		btp_readonly: false,
+		btp_sync_intermediate: false,
+		ticker_enabled: false,
+		umpire_tracking_enabled: false,
+		umpire_assignment_enabled: false,
+		service_judge_assignment_enabled: false,
 	};
 
 	app.db.tournaments.insert(t, function(err) {
