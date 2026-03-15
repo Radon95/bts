@@ -2,6 +2,48 @@
 
 var cumpire_manage = (function() {
 
+let tts_queue = [];
+let tts_speaking = false;
+let tts_match_timeouts = {};
+
+function process_tts_queue() {
+	if (tts_speaking || tts_queue.length === 0) return;
+
+	const { text, lang, match_id } = tts_queue.shift();
+	if (!window.speechSynthesis) return;
+
+	tts_speaking = true;
+	const utterance = new SpeechSynthesisUtterance(text);
+	utterance.lang = lang;
+	utterance.rate = 0.9;
+
+	utterance.onend = () => {
+		tts_speaking = false;
+		setTimeout(process_tts_queue, 500); // Small pause between calls
+	};
+	utterance.onerror = (e) => {
+		console.error('TTS error', e);
+		tts_speaking = false;
+		setTimeout(process_tts_queue, 500);
+	};
+
+	window.speechSynthesis.speak(utterance);
+}
+
+function queue_tts(text, lang, match_id) {
+	if (tts_match_timeouts[match_id]) {
+		clearTimeout(tts_match_timeouts[match_id]);
+	}
+
+	tts_match_timeouts[match_id] = setTimeout(() => {
+		delete tts_match_timeouts[match_id];
+		// Remove existing pending announcements for this match
+		tts_queue = tts_queue.filter(item => item.match_id !== match_id);
+		tts_queue.push({ text, lang, match_id });
+		process_tts_queue();
+	}, 1000); // Wait 1 second to see if more info (like an umpire) is assigned
+}
+
 function ui_show() {
 	crouting.set('t/:key/umpire_manage', {key: curt.key});
 	toprow.set([{
@@ -173,6 +215,58 @@ function ui_options() {
 	const p1_ctrls = create_penalty_controls(penalty_container, 1, 1.0, 0.0);
 	const p2_ctrls = create_penalty_controls(penalty_container, 2, 1.5, 0.5);
 
+	const call_container = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: left;'});
+	uiu.el(call_container, 'h3', {}, ci18n('umpire_manage:call_match:enabled'));
+
+	const call_enabled_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px;'});
+	const call_enabled_cb = uiu.el(call_enabled_label, 'input', {type: 'checkbox'});
+	call_enabled_cb.checked = !!curt.umpire_manage_call_match_enabled;
+	uiu.el(call_enabled_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:enabled'));
+
+	const call_sj_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	const call_sj_cb = uiu.el(call_sj_label, 'input', {type: 'checkbox'});
+	call_sj_cb.checked = !!curt.umpire_manage_call_match_optional_sj;
+	uiu.el(call_sj_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:optional_sj'));
+
+	const call_lj_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	const call_lj_cb = uiu.el(call_lj_label, 'input', {type: 'checkbox'});
+	call_lj_cb.checked = !!curt.umpire_manage_call_match_optional_lj;
+	uiu.el(call_lj_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:optional_lj'));
+
+	const corner_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	uiu.el(corner_label, 'span', {}, ci18n('umpire_manage:call_match:corner') + ': ');
+	const corner_select = uiu.el(corner_label, 'select');
+	['bottom-right', 'bottom-left', 'top-right', 'top-left'].forEach(corner => {
+		const opt = uiu.el(corner_select, 'option', {value: corner}, ci18n(`umpire_manage:call_match:corner:${corner}`));
+		if ((curt.umpire_manage_call_match_corner || 'bottom-right') === corner) opt.selected = true;
+	});
+
+	const lifetime_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	uiu.el(lifetime_label, 'span', {}, ci18n('umpire_manage:call_match:lifetime') + ': ');
+	const lifetime_input = uiu.el(lifetime_label, 'input', {
+		type: 'number',
+		style: 'width: 4em;',
+		value: curt.umpire_manage_call_match_lifetime !== undefined ? curt.umpire_manage_call_match_lifetime : 0,
+	});
+
+	const exact_words_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	const exact_words_cb = uiu.el(exact_words_label, 'input', {type: 'checkbox'});
+	exact_words_cb.checked = !!curt.umpire_manage_call_match_exact_words;
+	uiu.el(exact_words_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:exact_words'));
+
+	const read_call_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 40px;'});
+	const read_call_cb = uiu.el(read_call_label, 'input', {type: 'checkbox'});
+	read_call_cb.checked = localStorage.getItem('umpire_manage_call_match_read_call') === 'true';
+	uiu.el(read_call_label, 'span', {}, ' ' + ci18n('umpire_manage:call_match:read_call') + ' (' + ci18n('experimental') + ')');
+
+	const language_label = uiu.el(call_container, 'label', {style: 'display: block; margin-bottom: 5px; margin-left: 20px;'});
+	uiu.el(language_label, 'span', {}, ci18n('umpire_manage:call_match:language') + ': ');
+	const language_select = uiu.el(language_label, 'select');
+	['en', 'de'].forEach(lang => {
+		const opt = uiu.el(language_select, 'option', {value: lang}, ci18n(`umpire_manage:call_match:language:${lang}`));
+		if ((curt.umpire_manage_call_match_language || 'en') === lang) opt.selected = true;
+	});
+
 	function update_disabled() {
 		if (!tracking_cb.checked) {
 			assignment_cb.disabled = true;
@@ -183,11 +277,22 @@ function ui_options() {
 			sj_cb.disabled = !assignment_cb.checked;
 			lj_cb.disabled = false;
 		}
+
+		const call_enabled = call_enabled_cb.checked;
+		call_sj_cb.disabled = !call_enabled;
+		call_lj_cb.disabled = !call_enabled;
+		corner_select.disabled = !call_enabled;
+		lifetime_input.disabled = !call_enabled;
+		exact_words_cb.disabled = !call_enabled;
+		read_call_cb.disabled = !call_enabled || !exact_words_cb.checked;
+		language_select.disabled = !call_enabled;
 	}
 	update_disabled();
 
 	tracking_cb.addEventListener('change', update_disabled);
 	assignment_cb.addEventListener('change', update_disabled);
+	call_enabled_cb.addEventListener('change', update_disabled);
+	exact_words_cb.addEventListener('change', update_disabled);
 
 	const btn_row = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: right;'});
 	const cancel_btn = uiu.el(btn_row, 'button', {style: 'margin-right: 10px;'}, ci18n('Cancel'));
@@ -195,6 +300,8 @@ function ui_options() {
 
 	const ok_btn = uiu.el(btn_row, 'button', {}, ci18n('Change'));
 	ok_btn.addEventListener('click', () => {
+		localStorage.setItem('umpire_manage_call_match_read_call', read_call_cb.checked);
+
 		const props = {
 			umpire_tracking_enabled: tracking_cb.checked,
 			umpire_assignment_enabled: (tracking_cb.checked && assignment_cb.checked),
@@ -206,6 +313,13 @@ function ui_options() {
 			umpire_assignment_upcoming_penalty_1_multiplier: p1_ctrls.get_multiplier(),
 			umpire_assignment_upcoming_penalty_2_threshold: p2_ctrls.get_threshold(),
 			umpire_assignment_upcoming_penalty_2_multiplier: p2_ctrls.get_multiplier(),
+			umpire_manage_call_match_enabled: call_enabled_cb.checked,
+			umpire_manage_call_match_optional_sj: call_sj_cb.checked,
+			umpire_manage_call_match_optional_lj: call_lj_cb.checked,
+			umpire_manage_call_match_corner: corner_select.value,
+			umpire_manage_call_match_lifetime: parseInt(lifetime_input.value, 10),
+			umpire_manage_call_match_exact_words: exact_words_cb.checked,
+			umpire_manage_call_match_language: language_select.value,
 		};
 
 		send({
@@ -585,6 +699,149 @@ function ui_render() {
 	});
 }
 
+function show_call_notification(match) {
+	if (!curt.umpire_manage_call_match_enabled) return;
+
+	const corner = curt.umpire_manage_call_match_corner || 'bottom-right';
+	let container = document.querySelector(`.umpire_call_container_${corner}`);
+	if (!container) {
+		container = uiu.el(document.body, 'div', `umpire_call_container umpire_call_container_${corner}`);
+	}
+
+	let notification = container.querySelector(`.umpire_call_notification[data-match-id="${match._id}"]`);
+	if (notification) {
+		uiu.empty(notification);
+	} else {
+		notification = uiu.el(container, 'div', 'umpire_call_notification');
+		notification.dataset.matchId = match._id;
+	}
+
+	function close() {
+		if (notification.parentNode) {
+			uiu.remove(notification);
+		}
+	}
+
+	notification.addEventListener('click', close);
+
+	uiu.el(notification, 'div', 'umpire_call_close', '×');
+
+	const setup = match.setup;
+	const call_lang = curt.umpire_manage_call_match_language || 'en';
+
+	function t(key, data) {
+		return ci18n._translate(call_lang, key, data);
+	}
+
+	function get_discipline_abbrev(setup) {
+		const en = setup.event_name || '';
+		if (setup.is_doubles) {
+			if (en.includes('Mixed') || en.includes('GD') || en.includes('MX') || en.includes('XD')) return 'XD';
+			if (en.includes('Men') || en.includes('HD') || en.includes('MD')) return 'MD';
+			if (en.includes('Women') || en.includes('DD') || en.includes('WD')) return 'WD';
+			return 'D';
+		} else {
+			if (en.includes('Men') || en.includes('HE') || en.includes('MS')) return 'MS';
+			if (en.includes('Women') || en.includes('DE') || en.includes('WS')) return 'WS';
+			return 'S';
+		}
+	}
+
+	const discipline_abbrev = get_discipline_abbrev(setup);
+	const discipline_abbrev_translated = t(`umpire_manage:call_match:discipline:abbrev:${discipline_abbrev}`);
+	const discipline_full = t(`umpire_manage:call_match:discipline:${discipline_abbrev}`);
+
+	let round = '';
+	const mn = (setup.match_name || '').toLowerCase();
+	if (mn.includes('final') || mn === 'f') round = t('umpire_manage:call_match:round:final');
+	else if (mn.includes('semi') || mn === 'sf' || mn === 'hf') round = t('umpire_manage:call_match:round:semifinal');
+	else if (mn.includes('3') || mn === '3/4') round = t('umpire_manage:call_match:round:3rd_place');
+
+	const player_names_full = setup.teams.map(team =>
+		team.players.map(p => p.name).join(' ' + t('umpire_manage:call_match:and') + ' ')
+	).join(' ' + t('umpire_manage:call_match:vs') + ' ');
+
+	const player_names_short = setup.teams.map(team =>
+		team.players.map(p => p.name).join(' + ')
+	).join(' vs. ');
+
+	const court_num = setup.court_id ? (curt.courts.find(c => c._id === setup.court_id)?.num || setup.court_id) : '?';
+
+	let age_class = '';
+	const age_m = /([UuOo]\s*[0-9]+)/.exec(setup.event_name);
+	if (age_m) age_class = ' ' + age_m[1].replace(/\s+/g, '');
+
+	// Main info
+	const info_list = uiu.el(notification, 'ul', 'umpire_call_info');
+	uiu.el(info_list, 'li', {}, discipline_abbrev_translated + age_class);
+	if (round) uiu.el(info_list, 'li', {}, round);
+	uiu.el(info_list, 'li', {}, player_names_short);
+	if (setup.umpire_name) uiu.el(info_list, 'li', {}, (t('umpire_manage:call_match:label_umpire') + ' ' + setup.umpire_name));
+	if (curt.umpire_manage_call_match_optional_sj && setup.service_judge_name) {
+		uiu.el(info_list, 'li', {}, (t('umpire_manage:call_match:label_sj') + ' ' + setup.service_judge_name));
+	}
+	if (curt.umpire_manage_call_match_optional_lj && match.line_judges && match.line_judges.length > 0) {
+		const lj_names = match.line_judges.map(id => {
+			const u = curt.umpires.find(u => u._id === id);
+			return u ? u.name : id;
+		}).join(', ');
+		uiu.el(info_list, 'li', {}, (t('umpire_manage:call_match:label_lj') + ' ' + lj_names));
+	}
+	uiu.el(info_list, 'li', {}, (t('umpire_manage:call_match:label_court') + ' ' + court_num));
+
+	if (curt.umpire_manage_call_match_exact_words) {
+		let template_key = 'umpire_manage:call_match:template';
+		const has_sj = curt.umpire_manage_call_match_optional_sj && setup.service_judge_name;
+		const has_lj = curt.umpire_manage_call_match_optional_lj && match.line_judges && match.line_judges.length > 0;
+		if (has_sj && has_lj) template_key = 'umpire_manage:call_match:template_sj_lj';
+		else if (has_sj) template_key = 'umpire_manage:call_match:template_sj';
+		else if (has_lj) template_key = 'umpire_manage:call_match:template_lj';
+
+		const lj_names = has_lj ? match.line_judges.map(id => {
+			const u = curt.umpires.find(u => u._id === id);
+			return u ? u.name : id;
+		}).join(', ') : '';
+
+		const exact_words = t(template_key, {
+			discipline: discipline_full,
+			round: round || '',
+			players: player_names_full,
+			umpire: setup.umpire_name || '?',
+			sj: setup.service_judge_name || '?',
+			ljs: lj_names,
+			court: court_num,
+		}).replace(/, , /g, ', ').replace(/^, /, ''); // Fix empty round
+
+		uiu.el(notification, 'div', 'umpire_call_exact', exact_words);
+
+		if (localStorage.getItem('umpire_manage_call_match_read_call') === 'true') {
+			queue_tts(exact_words, call_lang, match._id);
+		}
+	}
+
+	const lifetime = curt.umpire_manage_call_match_lifetime;
+	if (lifetime && lifetime > 0) {
+		setTimeout(() => {
+			if (notification.parentNode) {
+				uiu.fadeout(notification, 4000);
+				setTimeout(close, 4050);
+			}
+		}, lifetime * 1000);
+	}
+}
+
+function dismiss_match_notifications(match_id) {
+	const notifications = document.querySelectorAll(`.umpire_call_notification[data-match-id="${match_id}"]`);
+	notifications.forEach(n => {
+		uiu.fadeout(n, 4000);
+		setTimeout(() => {
+			if (n.parentNode) {
+				uiu.remove(n);
+			}
+		}, 4050);
+	});
+}
+
 crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
 	ctournament.switch_tournament(m[1], function() {
 		ui_show();
@@ -594,6 +851,8 @@ crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
 return {
 	ui_show,
 	ui_render,
+	show_call_notification,
+	dismiss_match_notifications,
 };
 
 })();
