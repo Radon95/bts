@@ -6,6 +6,7 @@ let last_umpires_with_stats = [];
 
 let last_render_request_ts = 0;
 let render_timeout = null;
+let update_timer = null;
 
 let tts_queue = [];
 let tts_speaking = false;
@@ -49,8 +50,15 @@ function queue_tts(text, lang, match_id) {
 	}, 1000); // Wait 1 second to see if more info (like an umpire) is assigned
 }
 
+function ui_hide() {
+	if (update_timer) {
+		clearInterval(update_timer);
+		update_timer = null;
+	}
+}
+
 function ui_show() {
-	crouting.set('t/:key/umpire_manage', {key: curt.key});
+	crouting.set('t/:key/umpire_manage', {key: curt.key}, ui_hide);
 	toprow.set([{
 		label: ci18n('Tournaments'),
 		func: ctournament.ui_list,
@@ -85,6 +93,10 @@ function ui_show() {
 
 	uiu.el(main, 'div', 'umpire_manage_container');
 	ui_render(true);
+
+	if (!update_timer) {
+		update_timer = setInterval(request_render, 30000);
+	}
 }
 
 function ui_options() {
