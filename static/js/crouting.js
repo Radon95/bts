@@ -54,7 +54,8 @@ function _load(path) {
 	for (const r of routes) {
 		const m = r.route.exec(vpath);
 		if (m) {
-			for (const cfunc of cleanup_funcs) {
+			while (cleanup_funcs.length > 0) {
+				const cfunc = cleanup_funcs.pop();
 				cfunc();
 			}
 

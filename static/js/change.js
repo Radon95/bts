@@ -24,6 +24,7 @@ function change_score(cval) {
 		if (m.presses && m.presses.length > 0) {
 			cumpire_manage.dismiss_match_notifications(match_id);
 		}
+		cumpire_manage.update_match(match_id);
 	}
 }
 
@@ -134,8 +135,16 @@ function default_handler_func(rerender, special_funcs, c) {
 			if (c.val.line_judges !== undefined) {
 				changed_m.line_judges = c.val.line_judges;
 			}
+			if (c.val.network_score !== undefined) {
+				changed_m.network_score = c.val.network_score;
+			}
+			if (c.val.team1_won !== undefined) {
+				changed_m.team1_won = c.val.team1_won;
+			}
 
 			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
+				cumpire_manage.update_match(c.val.match__id);
+
 				const is_on_court = changed_m.setup.court_id && (!curt.only_now_on_court || changed_m.setup.now_on_court);
 				const was_on_court = old_court_id && (!curt.only_now_on_court || old_now_on_court);
 				const umpire_changed = (changed_m.setup.umpire_id || changed_m.setup.umpire_name) !== (old_umpire_id || '');
@@ -170,7 +179,7 @@ function default_handler_func(rerender, special_funcs, c) {
 			cmatch.render_umpire_options(select, select.value);
 		});
 		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
-			cumpire_manage.ui_render();
+			cumpire_manage.request_render();
 		}
 		break;
 	case 'umpire_edit':
@@ -182,7 +191,7 @@ function default_handler_func(rerender, special_funcs, c) {
 			curt.umpires.push(c.val);
 		}
 		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath() === `t/${curt.key}/umpire_manage`) {
-			cumpire_manage.ui_render();
+			cumpire_manage.request_render();
 		}
 		}
 		break;
