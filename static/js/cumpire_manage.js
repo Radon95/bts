@@ -4,6 +4,9 @@ var cumpire_manage = (function() {
 
 let last_umpires_with_stats = [];
 
+let last_render_request_ts = 0;
+let render_timeout = null;
+
 let tts_queue = [];
 let tts_speaking = false;
 let tts_match_timeouts = {};
@@ -388,6 +391,22 @@ function ui_umpire_details(u) {
 	const btn_row = uiu.el(dlg, 'div', {style: 'margin-top: 20px; text-align: right;'});
 	const close_btn = uiu.el(btn_row, 'button', {}, ci18n('Close'));
 	close_btn.addEventListener('click', close);
+}
+
+function request_render() {
+	if (render_timeout) return;
+	const now = Date.now();
+	const diff = now - last_render_request_ts;
+	if (diff < 500) {
+		render_timeout = setTimeout(() => {
+			render_timeout = null;
+			last_render_request_ts = Date.now();
+			ui_render();
+		}, 500 - diff);
+	} else {
+		last_render_request_ts = now;
+		ui_render();
+	}
 }
 
 function ui_render(full_rebuild) {
@@ -972,11 +991,45 @@ crouting.register(/t\/([a-z0-9]+)\/umpire_manage$/, function(m) {
 	ctournament.switch_tournament(m[1], function() {
 		ui_show();
 	});
-}, change.default_handler(ui_render));
+}, change.default_handler(request_render));
+
+function update_match(match_id) {
+	const match = curt.matches.find(m => m._id === match_id);
+	if (!match || !match.setup.court_id) return;
+
+	const court_id = match.setup.court_id;
+	const container = uiu.qs('.umpire_manage_container');
+	if (!container) return;
+
+	const section = container.querySelector(`.umpire_court_section[data-court-id="${court_id}"]`);
+	if (!section) return;
+
+	const tiles = section.querySelectorAll('.umpire_tile');
+	tiles.forEach(tile => {
+		const u_id = tile.dataset.umpireId;
+		const u = last_umpires_with_stats.find(u => u._id === u_id);
+		if (!u) return;
+
+		// Locally update match data for render_tile
+		u.on_court_match_score = match.network_score;
+		if (match.presses && match.presses.length > 0) {
+			u.on_court_match_start_ts = match.presses[0].timestamp;
+		}
+
+		// Re-derive roles to avoid visual regressions in render_tile
+		const is_sj = u.on_court_role === 'service_judge';
+		const is_lj = u.on_court_role === 'line_judge';
+		const has_sj = !is_sj && !!last_umpires_with_stats.find(ou => ou.on_court_court_id === court_id && ou.on_court_role === 'service_judge');
+
+		render_tile(section.querySelector('.umpire_court_umpires'), u, is_sj, has_sj, is_lj);
+	});
+}
 
 return {
 	ui_show,
 	ui_render,
+	request_render,
+	update_match,
 	show_call_notification,
 	dismiss_match_notifications,
 };

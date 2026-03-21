@@ -222,7 +222,13 @@ function integrate_matches(app, tkey, btp_state, court_map, callback) {
 				app.db.matches.update({_id: cur_match._id}, {$set: match}, {}, (err) => {
 					if (err) return cb(err);
 
-					admin.notify_change(app, match.tournament_key, 'match_edit', {match__id: match._id, setup: match.setup, line_judges: match.line_judges});
+					admin.notify_change(app, match.tournament_key, 'match_edit', {
+						match__id: match._id,
+						setup: match.setup,
+						line_judges: match.line_judges,
+						network_score: match.network_score,
+						team1_won: match.team1_won,
+					});
 					cb();
 				});
 				return;
