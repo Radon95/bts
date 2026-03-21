@@ -147,25 +147,12 @@ function reassign(app, tournament_key, callback) {
 
 		async.parallel({
 			umpires: cb => db.umpires.find({tournament_key}, cb),
-			unfinished_matches: cb => db.matches.find({
-				tournament_key,
-				end_ts: { $exists: false },
-			}, cb),
-			finished_matches: cb => db.matches.find({
-				tournament_key,
-				end_ts: { $exists: true },
-			}, {
-				'setup.umpire_id': 1, 'setup.umpire_name': 1,
-				'setup.service_judge_id': 1, 'setup.service_judge_name': 1,
-				'setup.match_num': 1, 'setup.match_name': 1,
-				line_judges: 1, end_ts: 1, match_order: 1,
-			}, cb),
+			matches: cb => db.matches.find({tournament_key}, cb),
 			courts: cb => db.courts.find({tournament_key}, cb),
 		}, (err, results) => {
 			if (err) return callback && callback(err);
 
-			const {umpires, unfinished_matches, finished_matches, courts} = results;
-			const matches = unfinished_matches.concat(finished_matches);
+			const {umpires, matches, courts} = results;
 			const now = Date.now();
 
 			_calculate_stats(umpires, matches);
@@ -277,26 +264,13 @@ function get_umpires_with_stats(app, tournament_key, callback) {
 
 	async.parallel({
 		umpires: cb => db.umpires.find({tournament_key}, cb),
-		unfinished_matches: cb => db.matches.find({
-			tournament_key,
-			end_ts: { $exists: false },
-		}, cb),
-		finished_matches: cb => db.matches.find({
-			tournament_key,
-			end_ts: { $exists: true },
-		}, {
-			'setup.umpire_id': 1, 'setup.umpire_name': 1,
-			'setup.service_judge_id': 1, 'setup.service_judge_name': 1,
-			'setup.match_num': 1, 'setup.match_name': 1,
-			line_judges: 1, end_ts: 1, match_order: 1,
-		}, cb),
+		matches: cb => db.matches.find({tournament_key}, cb),
 		tournament: cb => db.tournaments.findOne({key: tournament_key}, cb),
 		courts: cb => db.courts.find({tournament_key}, cb),
 	}, (err, results) => {
 		if (err) return callback(err);
 
-		const {umpires, unfinished_matches, finished_matches, tournament, courts} = results;
-		const matches = unfinished_matches.concat(finished_matches);
+		const {umpires, matches, tournament, courts} = results;
 		_calculate_stats(umpires, matches);
 		_calculate_penalties(umpires, matches, tournament, courts);
 
