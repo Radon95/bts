@@ -706,7 +706,7 @@ function ui_render(full_rebuild) {
 
 			// Clean up list: remove umpires that are no longer here
 			const target_umpire_ids = group_umpires.map(u => u._id);
-			const existing_tiles = Array.from(list.querySelectorAll('.umpire_tile'));
+			const existing_tiles = (list && list.querySelectorAll) ? Array.from(list.querySelectorAll('.umpire_tile')) : [];
 			existing_tiles.forEach(tile => {
 				if (!target_umpire_ids.includes(tile.dataset.umpireId)) {
 					uiu.remove(tile);
@@ -841,7 +841,7 @@ function render_tile(container, u, is_sj, has_sj, is_lj) {
 		target_infos.push(ci18n('umpire_manage:info:paused_for', {minutes: pause_duration}));
 	}
 
-	const existing_infos = Array.from(tile.querySelectorAll('.umpire_tile_info'));
+	const existing_infos = (tile && tile.querySelectorAll) ? Array.from(tile.querySelectorAll('.umpire_tile_info')) : [];
 	while (existing_infos.length > target_infos.length) {
 		uiu.remove(existing_infos.pop());
 	}
@@ -1016,7 +1016,7 @@ function update_match(match_id) {
 	const section = container.querySelector(`.umpire_court_section[data-court-id="${court_id}"]`);
 	if (!section) return;
 
-	const tiles = section.querySelectorAll('.umpire_tile');
+	const tiles = (section && section.querySelectorAll) ? Array.from(section.querySelectorAll('.umpire_tile')) : [];
 	tiles.forEach(tile => {
 		const u_id = tile.dataset.umpireId;
 		const u = last_umpires_with_stats.find(u => u._id === u_id);
