@@ -130,9 +130,18 @@ function update_current_match(c) {
 }
 
 function _show_render_matches() {
-	cmatch.render_courts(uiu.qs('.courts_container'));
-	cmatch.render_unassigned(uiu.qs('.unassigned_container'));
-	cmatch.render_finished(uiu.qs('.finished_container'));
+	const courts_container = uiu.qs('.courts_container', true);
+	if (courts_container) {
+		cmatch.render_courts(courts_container);
+	}
+	const unassigned_container = uiu.qs('.unassigned_container', true);
+	if (unassigned_container) {
+		cmatch.render_unassigned(unassigned_container);
+	}
+	const finished_container = uiu.qs('.finished_container', true);
+	if (finished_container) {
+		cmatch.render_finished(finished_container);
+	}
 }
 
 function ui_btp_fetch() {

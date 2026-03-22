@@ -122,7 +122,7 @@ function default_handler_func(rerender, special_funcs, c) {
 				}
 			}
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'match_edit':
@@ -161,7 +161,7 @@ function default_handler_func(rerender, special_funcs, c) {
 		} else {
 			cerror.silent('Cannot find edited match ' + c.val.match__id);
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'match_delete':
@@ -171,12 +171,12 @@ function default_handler_func(rerender, special_funcs, c) {
 		if (!deleted) {
 			cerror.silent('Cannot find deleted match ' + match_id);
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'courts_changed':
 		curt.courts = c.val.all_courts;
-		rerender();
+		if (rerender) rerender();
 		break;
 	case 'umpires_changed':
 		curt.umpires = c.val.all_umpires;
