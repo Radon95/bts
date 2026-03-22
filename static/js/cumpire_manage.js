@@ -422,7 +422,7 @@ function request_render() {
 }
 
 function ui_render(full_rebuild) {
-	const container = uiu.qs('.umpire_manage_container');
+	const container = uiu.qs('.umpire_manage_container', true);
 	if (!container) return;
 
 	send({
@@ -509,7 +509,7 @@ function ui_render(full_rebuild) {
 				}
 
 				// Find all existing court sections to maybe remove old ones
-				const existing_court_sections = Array.from(oncourt_container.querySelectorAll('.umpire_court_section'));
+				const existing_court_sections = (oncourt_container && oncourt_container.querySelectorAll) ? Array.from(oncourt_container.querySelectorAll('.umpire_court_section')) : [];
 				const court_ids = new Set(courts.map(c => c._id));
 				existing_court_sections.forEach(s => {
 					if (!court_ids.has(s.dataset.courtId)) {
@@ -537,7 +537,7 @@ function ui_render(full_rebuild) {
 
 					// Collect all umpire IDs that should be here
 					const target_umpire_ids = court_umpires.map(u => u._id);
-					const existing_tiles = Array.from(court_umpires_container.querySelectorAll('.umpire_tile'));
+					const existing_tiles = (court_umpires_container && court_umpires_container.querySelectorAll) ? Array.from(court_umpires_container.querySelectorAll('.umpire_tile')) : [];
 					existing_tiles.forEach(tile => {
 						if (!target_umpire_ids.includes(tile.dataset.umpireId)) {
 							uiu.remove(tile);
@@ -1010,7 +1010,7 @@ function update_match(match_id) {
 	if (!match || !match.setup.court_id) return;
 
 	const court_id = match.setup.court_id;
-	const container = uiu.qs('.umpire_manage_container');
+	const container = uiu.qs('.umpire_manage_container', true);
 	if (!container) return;
 
 	const section = container.querySelector(`.umpire_court_section[data-court-id="${court_id}"]`);
