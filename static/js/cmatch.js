@@ -313,6 +313,7 @@ function _delete_match_btn_click(e) {
 }
 
 function ui_edit(match_id) {
+	if (!curt || !curt.matches) return;
 	const match = utils.find(curt.matches, m => m._id === match_id);
 	if (!match) {
 		cerror.silent('Match ' + match_id + ' konnte nicht gefunden werden');
@@ -322,7 +323,7 @@ function ui_edit(match_id) {
 
 	cbts_utils.esc_stack_push(_cancel_ui_edit);
 
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dialog_bg = uiu.el(body, 'div', 'dialog_bg match_edit_dialog', {
 		'data-match_id': match_id,
 	});
@@ -389,7 +390,8 @@ crouting.register(/t\/([a-z0-9]+)\/m\/([-a-zA-Z0-9_ ]+)\/edit$/, function(m) {
 		ui_edit(m[2]);
 	});
 }, change.default_handler(() => {
-	const dlg = uiu.qs('.match_edit_dialog');
+	const dlg = document.querySelector('.match_edit_dialog');
+	if (!dlg) return;
 	const match_id = dlg.getAttribute('data-match_id');
 	ui_edit(match_id);
 }));
@@ -407,6 +409,7 @@ function _cancel_ui_scoresheet() {
 }
 
 function ui_scoresheet(match_id) {
+	if (!curt || !curt.matches) return;
 	const match = utils.find(curt.matches, m => m._id === match_id);
 	if (!match) {
 		cerror.silent('Match ' + match_id + ' konnte nicht gefunden werden');
@@ -417,7 +420,7 @@ function ui_scoresheet(match_id) {
 	cbts_utils.esc_stack_push(_cancel_ui_scoresheet);
 
 	uiu.hide_qs('.main');
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dialog = uiu.el(body, 'div', {
 		'class': 'match_scoresheet_dialog',
 		'data-match_id': match_id,
@@ -469,7 +472,8 @@ crouting.register(/t\/([a-z0-9]+)\/m\/([-a-zA-Z0-9_ ]+)\/scoresheet$/, function(
 		ui_scoresheet(m[2]);
 	});
 }, change.default_handler(() => {
-	const dlg = uiu.qs('.match_scoresheet_dialog');
+	const dlg = document.querySelector('.match_scoresheet_dialog');
+	if (!dlg) return;
 	const match_id = dlg.getAttribute('data-match_id');
 	ui_scoresheet(match_id);
 }));

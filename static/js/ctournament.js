@@ -33,7 +33,8 @@ function switch_tournament(tournament_key, success_cb) {
 }
 
 function ui_create() {
-	const main = uiu.qs('.main');
+	const main = document.querySelector('.main');
+	if (!main) return;
 
 	uiu.empty(main);
 	const form = uiu.el(main, 'form');
@@ -83,7 +84,8 @@ function ui_list() {
 crouting.register(/^t\/$/, ui_list, change.default_handler);
 
 function list_show(tournaments) {
-	const main = uiu.qs('.main');
+	const main = document.querySelector('.main');
+	if (!main) return;
 	uiu.empty(main);
 	uiu.el(main, 'h1', {}, 'Tournaments');
 	tournaments.forEach(function(t) {
@@ -100,6 +102,7 @@ function list_show(tournaments) {
 }
 
 function update_score(c) {
+	if (!curt || !curt.matches) return;
 	const cval = c.val;
 	const match_id = cval.match_id;
 
@@ -130,15 +133,15 @@ function update_current_match(c) {
 }
 
 function _show_render_matches() {
-	const courts_container = uiu.qs('.courts_container', true);
+	const courts_container = document.querySelector('.courts_container');
 	if (courts_container) {
 		cmatch.render_courts(courts_container);
 	}
-	const unassigned_container = uiu.qs('.unassigned_container', true);
+	const unassigned_container = document.querySelector('.unassigned_container');
 	if (unassigned_container) {
 		cmatch.render_unassigned(unassigned_container);
 	}
-	const finished_container = uiu.qs('.finished_container', true);
+	const finished_container = document.querySelector('.finished_container');
 	if (finished_container) {
 		cmatch.render_finished(finished_container);
 	}
@@ -167,6 +170,7 @@ function ui_ticker_push() {
 }
 
 function ui_show() {
+	if (!curt) return;
 	crouting.set('t/:key/', {key: curt.key});
 	const bup_lang = ((curt.language && curt.language !== 'auto') ? '&lang=' + encodeURIComponent(curt.language) : '');
 	const bup_dm_style = '&dm_style=' + encodeURIComponent(curt.dm_style || 'international');
@@ -188,7 +192,8 @@ function ui_show() {
 		href: '/admin/t/' + encodeURIComponent(curt.key) + '/upcoming',
 	},]);
 
-	const main = uiu.qs('.main');
+	const main = document.querySelector('.main');
+	if (!main) return;
 	uiu.empty(main);
 
 	const settings_btn = uiu.el(main, 'div', 'tournament_settings_link vlink', ci18n('edit tournament'));
@@ -258,6 +263,7 @@ function _upload_logo(e) {
 }
 
 function ui_edit() {
+	if (!curt) return;
 	crouting.set('t/:key/edit', {key: curt.key});
 	toprow.set([{
 		label: ci18n('Tournaments'),
@@ -271,7 +277,8 @@ function ui_edit() {
 		func: ui_edit,
 	}]);
 
-	const main = uiu.qs('.main');
+	const main = document.querySelector('.main');
+	if (!main) return;
 	uiu.empty(main);
 
 	const form = uiu.el(main, 'form', 'tournament_settings');
@@ -716,10 +723,12 @@ function render_upcoming(container) {
 }
 
 function ui_upcoming() {
+	if (!curt) return;
 	crouting.set('t/:key/upcoming', {key: curt.key});
 	toprow.hide();
 
-	const main = uiu.qs('.main');
+	const main = document.querySelector('.main');
+	if (!main) return;
 	uiu.empty(main);
 	main.classList.add('main_upcoming');
 
