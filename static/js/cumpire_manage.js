@@ -70,18 +70,19 @@ function ui_show() {
 		label: ci18n('umpire_manage:title'),
 	}]);
 
-	const main = uiu.qs('.main');
-	uiu.empty(main);
+		const main = document.querySelector('.main');
+		if (!main) return;
+		uiu.empty(main);
 
 	uiu.el(main, 'h1', {}, ci18n('umpire_manage:title'));
 
 	const top_controls = uiu.el(main, 'div', 'umpire_manage_controls');
 
 	const options_btn = uiu.el(top_controls, 'button', {}, ci18n('umpire_manage:options'));
-	options_btn.addEventListener('click', ui_options);
+	if (options_btn) options_btn.addEventListener('click', ui_options);
 
 	const recalc_btn = uiu.el(top_controls, 'button', {}, ci18n('umpire_manage:recalculate'));
-	recalc_btn.addEventListener('click', () => {
+	if (recalc_btn) recalc_btn.addEventListener('click', () => {
 		send({
 			type: 'umpire_recalculate',
 			tournament_key: curt.key,
@@ -100,7 +101,7 @@ function ui_show() {
 }
 
 function ui_options() {
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dlg_bg = uiu.el(body, 'div', 'dialog_bg');
 	const dlg = uiu.el(dlg_bg, 'div', 'dialog');
 
@@ -353,7 +354,7 @@ function ui_options() {
 }
 
 function ui_umpire_details(u) {
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dlg_bg = uiu.el(body, 'div', 'dialog_bg');
 	const dlg = uiu.el(dlg_bg, 'div', 'dialog');
 
@@ -422,7 +423,7 @@ function request_render() {
 }
 
 function ui_render(full_rebuild) {
-	const container = uiu.qs('.umpire_manage_container');
+	const container = document.querySelector('.umpire_manage_container');
 	if (!container) return;
 
 	send({
@@ -454,6 +455,7 @@ function ui_render(full_rebuild) {
 		};
 
 		statuses.forEach(status => {
+			if (!container || (typeof container.querySelector !== 'function')) return;
 			const is_slid_out = status.slidable && !slide_config[status.id].is_pinned;
 			let group = container.querySelector(`.umpire_group[data-status-id="${status.id}"]`);
 			if (!group) {
@@ -465,6 +467,7 @@ function ui_render(full_rebuild) {
 				group.className = 'umpire_group' + (is_slid_out ? ' umpire_group_sliding' : '') + (status.id === 'oncourt' ? ' oncourt_group' : '');
 			}
 
+			if (!group || (typeof group.querySelector !== 'function')) return;
 			let header = group.querySelector('.umpire_group_header');
 			if (!header) {
 				header = uiu.el(group, 'div', {
@@ -495,6 +498,7 @@ function ui_render(full_rebuild) {
 				group.style.top = '';
 			}
 
+			if (!header || (typeof header.querySelector !== 'function')) return;
 			let title_span = header.querySelector('.umpire_group_title');
 			if (!title_span) {
 				title_span = uiu.el(header, 'span', 'umpire_group_title');
@@ -509,7 +513,7 @@ function ui_render(full_rebuild) {
 				}
 
 				// Find all existing court sections to maybe remove old ones
-				const existing_court_sections = Array.from(oncourt_container.querySelectorAll('.umpire_court_section'));
+				const existing_court_sections = (oncourt_container && (typeof oncourt_container.querySelectorAll === 'function')) ? Array.from(oncourt_container.querySelectorAll('.umpire_court_section')) : [];
 				const court_ids = new Set(courts.map(c => c._id));
 				existing_court_sections.forEach(s => {
 					if (!court_ids.has(s.dataset.courtId)) {
@@ -518,6 +522,7 @@ function ui_render(full_rebuild) {
 				});
 
 				courts.forEach(court => {
+					if (!oncourt_container || (typeof oncourt_container.querySelector !== 'function')) return;
 					let section = oncourt_container.querySelector(`.umpire_court_section[data-court-id="${court._id}"]`);
 					if (!section) {
 						section = uiu.el(oncourt_container, 'div', 'umpire_court_section');
@@ -525,9 +530,11 @@ function ui_render(full_rebuild) {
 						uiu.el(section, 'div', 'umpire_court_label', court.num);
 						uiu.el(section, 'div', 'umpire_court_umpires');
 					} else {
+						if (typeof section.querySelector !== 'function') return;
 						const label = section.querySelector('.umpire_court_label');
 						uiu.text(label, court.num);
 					}
+					if (!section || (typeof section.querySelector !== 'function')) return;
 					const court_umpires_container = section.querySelector('.umpire_court_umpires');
 
 					const court_umpires = group_umpires.filter(u => (u.on_court_court_id === court._id) || (u.on_court_court_id === court.num));
@@ -537,7 +544,7 @@ function ui_render(full_rebuild) {
 
 					// Collect all umpire IDs that should be here
 					const target_umpire_ids = court_umpires.map(u => u._id);
-					const existing_tiles = Array.from(court_umpires_container.querySelectorAll('.umpire_tile'));
+					const existing_tiles = (court_umpires_container && (typeof court_umpires_container.querySelectorAll === 'function')) ? Array.from(court_umpires_container.querySelectorAll('.umpire_tile')) : [];
 					existing_tiles.forEach(tile => {
 						if (!target_umpire_ids.includes(tile.dataset.umpireId)) {
 							uiu.remove(tile);
@@ -620,7 +627,7 @@ function ui_render(full_rebuild) {
 			let list = group.querySelector('.umpire_list');
 			if (!list) {
 				list = uiu.el(group, 'div', 'umpire_list');
-				list.dataset.status = status.id;
+				if (list) list.dataset.status = status.id;
 
 				if (is_slid_out) {
 					header.addEventListener('dragenter', (e) => {
@@ -706,7 +713,7 @@ function ui_render(full_rebuild) {
 
 			// Clean up list: remove umpires that are no longer here
 			const target_umpire_ids = group_umpires.map(u => u._id);
-			const existing_tiles = Array.from(list.querySelectorAll('.umpire_tile'));
+			const existing_tiles = (list && (typeof list.querySelectorAll === 'function')) ? Array.from(list.querySelectorAll('.umpire_tile')) : [];
 			existing_tiles.forEach(tile => {
 				if (!target_umpire_ids.includes(tile.dataset.umpireId)) {
 					uiu.remove(tile);
@@ -726,6 +733,7 @@ function ui_render(full_rebuild) {
 }
 
 function render_tile(container, u, is_sj, has_sj, is_lj) {
+	if (!container || (typeof container.querySelector !== 'function')) return;
 	const is_draggable = (u.calculated_status !== 'oncourt') || (is_lj && curt.line_judge_assignment_enabled);
 	let tile = container.querySelector(`.umpire_tile[data-umpire-id="${u._id}"]`);
 	if (!tile) {
@@ -784,17 +792,22 @@ function render_tile(container, u, is_sj, has_sj, is_lj) {
 	tile.className = 'umpire_tile' + (is_sj ? ' umpire_tile_sj' : '') + (has_sj ? ' umpire_tile_with_sj' : '') + (is_lj ? ' umpire_tile_lj' : '');
 	tile.setAttribute('draggable', (is_draggable ? 'true' : 'false'));
 
+	if (!tile || (typeof tile.querySelector !== 'function')) return;
 	let hover_info = tile.querySelector('.umpire_tile_hover');
 	if (!hover_info) {
 		hover_info = uiu.el(tile, 'div', {
 			'class': 'umpire_tile_hover',
 			style: 'display:none',
 		});
-		uiu.el(hover_info, 'div', 'umpire_total_matches');
-		uiu.el(hover_info, 'div', 'umpire_today_matches');
+		if (hover_info) {
+			uiu.el(hover_info, 'div', 'umpire_total_matches');
+			uiu.el(hover_info, 'div', 'umpire_today_matches');
+		}
 	}
-	uiu.text(hover_info.querySelector('.umpire_total_matches'), ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
-	uiu.text(hover_info.querySelector('.umpire_today_matches'), ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
+	if (hover_info && (typeof hover_info.querySelector === 'function')) {
+		uiu.text(hover_info.querySelector('.umpire_total_matches'), ci18n('umpire_manage:info:total_matches', {total: u.total_matches_all}));
+		uiu.text(hover_info.querySelector('.umpire_today_matches'), ci18n('umpire_manage:info:today_matches', {today: u.total_matches_today}));
+	}
 
 	let name_div = tile.querySelector('.umpire_tile_name');
 	if (!name_div) {
@@ -808,7 +821,7 @@ function render_tile(container, u, is_sj, has_sj, is_lj) {
 	let options_btn = tile.querySelector('.umpire_tile_options');
 	if (!options_btn) {
 		options_btn = uiu.el(tile, 'div', 'umpire_tile_options', '⋮');
-		options_btn.addEventListener('click', (e) => {
+		if (options_btn) options_btn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			const umpire_id = tile.dataset.umpireId;
 			const current_u = last_umpires_with_stats.find(u => u._id === umpire_id);
@@ -841,7 +854,7 @@ function render_tile(container, u, is_sj, has_sj, is_lj) {
 		target_infos.push(ci18n('umpire_manage:info:paused_for', {minutes: pause_duration}));
 	}
 
-	const existing_infos = Array.from(tile.querySelectorAll('.umpire_tile_info'));
+	const existing_infos = (tile && (typeof tile.querySelectorAll === 'function')) ? Array.from(tile.querySelectorAll('.umpire_tile_info')) : [];
 	while (existing_infos.length > target_infos.length) {
 		uiu.remove(existing_infos.pop());
 	}
@@ -1010,13 +1023,13 @@ function update_match(match_id) {
 	if (!match || !match.setup.court_id) return;
 
 	const court_id = match.setup.court_id;
-	const container = uiu.qs('.umpire_manage_container');
+	const container = document.querySelector('.umpire_manage_container');
 	if (!container) return;
 
 	const section = container.querySelector(`.umpire_court_section[data-court-id="${court_id}"]`);
-	if (!section) return;
+	if (!section || (typeof section.querySelectorAll !== 'function')) return;
 
-	const tiles = section.querySelectorAll('.umpire_tile');
+	const tiles = (section && (typeof section.querySelectorAll === 'function')) ? Array.from(section.querySelectorAll('.umpire_tile')) : [];
 	tiles.forEach(tile => {
 		const u_id = tile.dataset.umpireId;
 		const u = last_umpires_with_stats.find(u => u._id === u_id);

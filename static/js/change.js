@@ -6,6 +6,17 @@ function default_handler(rerender, special_funcs) {
 	};
 }
 
+function is_same_official(id1, name1, id2, name2) {
+	const i1 = (id1 || '').trim();
+	const i2 = (id2 || '').trim();
+	const n1 = (name1 || '').trim().toLowerCase();
+	const n2 = (name2 || '').trim().toLowerCase();
+
+	if (i1 && i2) return i1 === i2;
+	if (n1 && n2) return n1 === n2;
+	return i1 === i2 && n1 === n2;
+}
+
 function change_score(cval) {
 	const match_id = cval.match_id;
 
@@ -21,7 +32,7 @@ function change_score(cval) {
 	m.team1_won = cval.team1_won;
 
 	if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
-		if (m.presses && m.presses.length > 0) {
+		if (cval.silent || (m.presses && m.presses.length > 0)) {
 			cumpire_manage.dismiss_match_notifications(match_id);
 		}
 		cumpire_manage.update_match(match_id);
@@ -35,7 +46,7 @@ function change_current_match(cval) {
 		const old_match_id = court.match_id;
 		court.match_id = cval.match_id;
 
-		if (cval.match_id && cval.match_id !== old_match_id) {
+		if (cval.match_id && cval.match_id !== old_match_id && !cval.silent) {
 			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
 				const m = utils.find(curt.matches, m => m._id === cval.match_id);
 				if (m) {
@@ -72,6 +83,7 @@ function default_handler_func(rerender, special_funcs, c) {
 		}
 
 		uiu.qsEach('.ct_name', function(el) {
+			if (!curt) return;
 			if (el.tagName.toUpperCase() === 'INPUT') {
 				el.value = curt.name;
 			} else {
@@ -84,28 +96,35 @@ function default_handler_func(rerender, special_funcs, c) {
 			'ticker_enabled'];
 		for (const cb_name of CHECKBOXES) {
 			uiu.qsEach('input[name="' + cb_name + '"]', function(el) {
+				if (!curt) return;
 				el.checked = curt[cb_name];
 			});
 		}
 		uiu.qsEach('input[name="btp_ip"]', function(el) {
+			if (!curt) return;
 			el.value = curt.btp_ip || '';
 		});
 		uiu.qsEach('input[name="btp_password"]', function(el) {
+			if (!curt) return;
 			el.value = curt.btp_password || '';
 		});
 		uiu.qsEach('input[name="btp_autofetch_interval"]', function(el) {
+			if (!curt) return;
 			el.value = curt.btp_autofetch_interval ? Math.round(curt.btp_autofetch_interval / 1000) : 30;
 		});
 
 		uiu.qsEach('input[name="ticker_url"]', function(el) {
+			if (!curt) return;
 			el.value = curt.ticker_url || '';
 		});
 		uiu.qsEach('input[name="ticker_password"]', function(el) {
+			if (!curt) return;
 			el.value = curt.ticker_password || '';
 		});
 
-		if (crouting.get_vpath() === `t/${curt.key}/edit`) {
-			const update_func = uiu.qs('form.tournament_settings').update_btp_disabled;
+		if (curt && crouting.get_vpath() === `t/${curt.key}/edit`) {
+			const form_el = document.querySelector('form.tournament_settings');
+			const update_func = form_el ? form_el.update_btp_disabled : null;
 			if (update_func) update_func();
 		}
 
@@ -113,22 +132,26 @@ function default_handler_func(rerender, special_funcs, c) {
 	case 'match_add':
 		{
 		const new_m = c.val.match;
-		curt.matches.push(new_m);
-		if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
-			const is_on_court = new_m.setup.court_id && (!curt.only_now_on_court || new_m.setup.now_on_court);
-			if (is_on_court) {
-				window.setTimeout(() => cumpire_manage.show_call_notification(new_m), 0);
+		if (curt && curt.matches) curt.matches.push(new_m);
+		if (curt && (typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
+			if (!c.val.silent) {
+				const is_on_court = new_m.setup.court_id && (!curt.only_now_on_court || new_m.setup.now_on_court);
+				if (is_on_court) {
+					window.setTimeout(() => cumpire_manage.show_call_notification(new_m), 0);
+				}
 			}
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'match_edit':
 		{
+		if (!curt || !curt.matches) return;
 		const changed_m = utils.find(curt.matches, m => m._id === c.val.match__id);
 		if (changed_m) {
 			const old_court_id = changed_m.setup.court_id;
 			const old_umpire_id = changed_m.setup.umpire_id;
+			const old_umpire_name = changed_m.setup.umpire_name;
 			const old_now_on_court = changed_m.setup.now_on_court;
 
 			changed_m.setup = c.val.setup;
@@ -145,36 +168,45 @@ function default_handler_func(rerender, special_funcs, c) {
 			if ((typeof cumpire_manage !== 'undefined') && crouting.get_vpath().includes('umpire_manage')) {
 				cumpire_manage.update_match(c.val.match__id);
 
-				const is_on_court = changed_m.setup.court_id && (!curt.only_now_on_court || changed_m.setup.now_on_court);
-				const was_on_court = old_court_id && (!curt.only_now_on_court || old_now_on_court);
-				const umpire_changed = (changed_m.setup.umpire_id || changed_m.setup.umpire_name) !== (old_umpire_id || '');
+				if (!c.val.silent) {
+					const is_on_court = changed_m.setup.court_id && (!curt.only_now_on_court || changed_m.setup.now_on_court);
+					const was_on_court = old_court_id && (!curt.only_now_on_court || old_now_on_court);
 
-				if ((is_on_court && !was_on_court) || (is_on_court && umpire_changed)) {
-					window.setTimeout(() => cumpire_manage.show_call_notification(changed_m), 0);
+					const old_u_id = old_umpire_id || '';
+					const old_u_name = old_umpire_name || '';
+					const new_u_id = changed_m.setup.umpire_id || '';
+					const new_u_name = changed_m.setup.umpire_name || '';
+
+					const umpire_changed = !is_same_official(old_umpire_id, old_umpire_name, changed_m.setup.umpire_id, changed_m.setup.umpire_name);
+
+					if ((is_on_court && !was_on_court) || (is_on_court && umpire_changed)) {
+						window.setTimeout(() => cumpire_manage.show_call_notification(changed_m), 0);
+					}
 				}
 			}
 		} else {
 			cerror.silent('Cannot find edited match ' + c.val.match__id);
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'match_delete':
 		{
+		if (!curt || !curt.matches) return;
 		const match_id = c.val.match__id;
 		const deleted = utils.remove_cb(curt.matches, m => m._id === match_id);
 		if (!deleted) {
 			cerror.silent('Cannot find deleted match ' + match_id);
 		}
-		rerender();
+		if (rerender) rerender();
 		}
 		break;
 	case 'courts_changed':
-		curt.courts = c.val.all_courts;
-		rerender();
+		if (curt) curt.courts = c.val.all_courts;
+		if (rerender) rerender();
 		break;
 	case 'umpires_changed':
-		curt.umpires = c.val.all_umpires;
+		if (curt) curt.umpires = c.val.all_umpires;
 		uiu.qsEach('select[name="umpire_name"]', function(select) {
 			cmatch.render_umpire_options(select, select.value);
 		});
@@ -184,6 +216,7 @@ function default_handler_func(rerender, special_funcs, c) {
 		break;
 	case 'umpire_edit':
 		{
+		if (!curt || !curt.umpires) return;
 		const u = utils.find(curt.umpires, u => u._id === c.val._id);
 		if (u) {
 			Object.assign(u, c.val);

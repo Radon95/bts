@@ -352,6 +352,7 @@ function score_handler(req, res) {
 				admin.notify_change(req.app, tournament_key, 'court_current_match', {
 					match_id,
 					court_id: court._id,
+					silent: true,
 				});
 			}
 			cb(null, match, changed_court);
@@ -384,6 +385,7 @@ function score_handler(req, res) {
 			network_score: update.network_score,
 			team1_won: update.team1_won,
 			shuttle_count: update.shuttle_count,
+			silent: true,
 		});
 		res.json({status: 'ok'});
 	});
