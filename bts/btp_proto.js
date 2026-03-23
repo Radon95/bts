@@ -50,7 +50,7 @@ function login_request(password) {
 	return res;
 }
 
-function update_request(match, key_unicode, password, umpire_btp_id, service_judge_btp_id, court_btp_id) {
+function update_request(match, key_unicode, password, umpire_btp_id, service_judge_btp_id, court_btp_id, sync_intermediate) {
 	assert(key_unicode);
 	const matches = [];
 	const res = {
@@ -77,37 +77,44 @@ function update_request(match, key_unicode, password, umpire_btp_id, service_jud
 		res.Action.Password = password;
 	}
 
-	assert(typeof match.team1_won === 'boolean');
-	const winner = match.team1_won ? 1 : 2;
 	assert(match.btp_match_ids);
 	assert(match.btp_match_ids.length > 0);
-	assert(match.network_score);
-	const duration_mins = match.duration_ms ? Math.floor(match.duration_ms / 60000) : 0;
 	const shuttle_count = match.shuttle_count;
 
 	for (const btp_m_id of match.btp_match_ids) {
 		assert(btp_m_id);
 
-		const sets = match.network_score.map(ns => {
-			return {
-				Set: {
-					T1: ns[0],
-					T2: ns[1],
-				},
-			};
-		});
-
 		const m = {
 			ID: btp_m_id.id,
 			DrawID: btp_m_id.draw,
 			PlanningID: btp_m_id.planning,
-			Sets: sets,
-			Winner: winner,
-			ScoreStatus: 0, // Won normally (TODO: correctly handle resignations etc.)
-			Duration: duration_mins,
 			Status: 0,
 			// BTP also sends a boolean ScoreSheetPrinted here
 		};
+
+		const is_finished = typeof match.team1_won === 'boolean';
+		if (is_finished || sync_intermediate) {
+			if (is_finished) {
+				m.Winner = match.team1_won ? 1 : 2;
+				m.ScoreStatus = 0; // Won normally (TODO: correctly handle resignations etc.)
+			}
+
+			if (match.network_score) {
+				m.Sets = match.network_score.map(ns => {
+					return {
+						Set: {
+							T1: ns[0],
+							T2: ns[1],
+						},
+					};
+				});
+			}
+
+			if (match.duration_ms) {
+				m.Duration = Math.floor(match.duration_ms / 60000);
+			}
+		}
+
 		if (umpire_btp_id) {
 			m.Official1ID = umpire_btp_id;
 		}

@@ -162,3 +162,377 @@ table.striped-table {
 	padding-left: 0.3em;
 	white-space: pre-wrap;
 }
+
+/* Umpire Management */
+.umpire_manage_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+}
+
+.umpire_group {
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f9f9f9;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.umpire_group_header {
+    padding: 10px 15px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.umpire_list {
+    min-height: 100px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.umpire_oncourt_container {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.umpire_court_section {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #ccc;
+}
+.umpire_court_section:last-child {
+    border-bottom: none;
+}
+
+.umpire_court_label {
+    width: 45px;
+    font-weight: bold;
+    color: white;
+    background: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 0;
+}
+
+.umpire_court_umpires {
+    flex: 1;
+    padding: 0;
+}
+
+.umpire_oncourt_container .umpire_tile {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 8px 15px;
+}
+
+.umpire_oncourt_container .umpire_tile_sj {
+    padding-top: 8px;
+    opacity: 0.8;
+    border-top: 1px dashed #ccc;
+}
+
+.umpire_oncourt_container .umpire_tile_with_sj {
+    padding-bottom: 4px;
+}
+
+.umpire_oncourt_container .umpire_tile_lj {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    opacity: 0.7;
+    border-top: 1px dashed #eee;
+    font-size: 0.9em;
+}
+
+.umpire_court_section_lj_target.umpire_court_section_active {
+    background-color: #e3f2fd;
+    outline: 2px dashed #2196f3;
+    outline-offset: -2px;
+}
+
+.umpire_tile {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: grab;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    user-select: none;
+}
+
+.umpire_tile_name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.umpire_tile_info {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.umpire_tile_hover {
+    position: fixed;
+    background: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    z-index: 100;
+    width: 150px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.umpire_manage_controls {
+    padding: 20px;
+    background: #eee;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.umpire_manage_controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.umpire_tile_options {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #999;
+}
+.umpire_tile_options:hover {
+    color: #333;
+}
+
+.umpire_details_weight_controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.umpire_details_stat {
+    margin-bottom: 5px;
+}
+
+/* Sliding and Pinning Lists */
+.umpire_group.umpire_group_sliding {
+    position: fixed;
+    z-index: 500;
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    min-width: 320px;
+    background: #f9f9f9;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.umpire_group.umpire_group_sliding .umpire_list[data-status="oncourt"],
+.umpire_group.umpire_group_sliding.oncourt_group {
+    min-width: 380px;
+}
+
+.umpire_group.umpire_group_sliding .umpire_list {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.umpire_group.umpire_group_sliding .umpire_tile {
+    flex-shrink: 0;
+}
+
+.umpire_group.umpire_group_sliding .umpire_group_header {
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.umpire_group_sliding[data-direction="bottom"] {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(100% - 51px));
+}
+.umpire_group_sliding[data-direction="bottom"].umpire_group_active,
+.umpire_group_sliding[data-direction="bottom"]:hover {
+    transform: translateX(-50%) translateY(0);
+}
+
+.umpire_group_sliding[data-direction="top"] {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(calc(-100% + 51px));
+    flex-direction: column-reverse;
+}
+.umpire_group_sliding[data-direction="top"] .umpire_group_header {
+    border-top: 1px solid #ccc;
+    border-bottom: none;
+}
+.umpire_group_sliding[data-direction="top"].umpire_group_active,
+.umpire_group_sliding[data-direction="top"]:hover {
+    transform: translateX(-50%) translateY(0);
+}
+
+.umpire_group_sliding[data-direction="left"] {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(-100% + 67px));
+    flex-direction: row-reverse;
+    height: 320px;
+}
+.umpire_group_sliding[data-direction="left"].umpire_group_active,
+.umpire_group_sliding[data-direction="left"]:hover {
+    transform: translateY(-50%) translateX(0);
+}
+.umpire_group_sliding[data-direction="left"] .umpire_group_header {
+    writing-mode: vertical-lr;
+    height: 100%;
+    border-left: 1px solid #ccc;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 10px;
+}
+
+.umpire_group_sliding[data-direction="right"] {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(calc(100% - 67px));
+    flex-direction: row;
+    height: 320px;
+}
+.umpire_group_sliding[data-direction="right"].umpire_group_active,
+.umpire_group_sliding[data-direction="right"]:hover {
+    transform: translateY(-50%) translateX(0);
+}
+.umpire_group_sliding[data-direction="right"] .umpire_group_header {
+    writing-mode: vertical-lr;
+    height: 100%;
+    border-right: 1px solid #ccc;
+    border-bottom: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.umpire_group_pinned_toggle {
+    cursor: pointer;
+    margin-left: 60px;
+}
+.umpire_group_sliding[data-direction="left"] .umpire_group_pinned_toggle,
+.umpire_group_sliding[data-direction="right"] .umpire_group_pinned_toggle {
+    margin-left: 0;
+    margin-top: 60px;
+}
+
+.umpire_manage_container {
+    justify-content: center;
+}
+
+/* Call Notifications */
+.umpire_call_container {
+    position: fixed;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    pointer-events: none;
+    max-width: 400px;
+}
+
+.umpire_call_container_bottom-right {
+    bottom: 0;
+    right: 0;
+}
+
+.umpire_call_container_bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.umpire_call_container_top-right {
+    top: 0;
+    right: 0;
+    flex-direction: column-reverse;
+}
+
+.umpire_call_container_top-left {
+    top: 0;
+    left: 0;
+    flex-direction: column-reverse;
+}
+
+.umpire_call_notification {
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative;
+    animation: umpire_call_slide_in 0.3s ease-out;
+}
+
+@keyframes umpire_call_slide_in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.umpire_call_close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 24px;
+    color: #999;
+    line-height: 1;
+}
+.umpire_call_notification:hover .umpire_call_close {
+    color: #333;
+}
+
+.umpire_call_info {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 1.1em;
+}
+
+.umpire_call_info li {
+    margin-bottom: 5px;
+}
+
+.umpire_call_info li:nth-child(3) {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.umpire_call_exact {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+    font-style: italic;
+    color: #444;
+    font-size: 0.9em;
+}

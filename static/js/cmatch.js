@@ -275,8 +275,10 @@ function _make_setup(d) {
 		scheduled_time_str: d.scheduled_time_str,
 		scheduled_date: d.scheduled_date,
 		event_name: d.event_name,
-		umpire_name: d.umpire_name,
-		service_judge_name: d.service_judge_name,
+		umpire_id: d.umpire_id,
+		umpire_name: (curt.umpires.find(u => u._id === d.umpire_id) || {name: ''}).name,
+		service_judge_id: d.service_judge_id,
+		service_judge_name: (curt.umpires.find(u => u._id === d.service_judge_id) || {name: ''}).name,
 		override_colors,
 		teams,
 		is_doubles,
@@ -311,6 +313,7 @@ function _delete_match_btn_click(e) {
 }
 
 function ui_edit(match_id) {
+	if (!curt || !curt.matches) return;
 	const match = utils.find(curt.matches, m => m._id === match_id);
 	if (!match) {
 		cerror.silent('Match ' + match_id + ' konnte nicht gefunden werden');
@@ -320,7 +323,7 @@ function ui_edit(match_id) {
 
 	cbts_utils.esc_stack_push(_cancel_ui_edit);
 
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dialog_bg = uiu.el(body, 'div', 'dialog_bg match_edit_dialog', {
 		'data-match_id': match_id,
 	});
@@ -387,7 +390,8 @@ crouting.register(/t\/([a-z0-9]+)\/m\/([-a-zA-Z0-9_ ]+)\/edit$/, function(m) {
 		ui_edit(m[2]);
 	});
 }, change.default_handler(() => {
-	const dlg = uiu.qs('.match_edit_dialog');
+	const dlg = document.querySelector('.match_edit_dialog');
+	if (!dlg) return;
 	const match_id = dlg.getAttribute('data-match_id');
 	ui_edit(match_id);
 }));
@@ -405,6 +409,7 @@ function _cancel_ui_scoresheet() {
 }
 
 function ui_scoresheet(match_id) {
+	if (!curt || !curt.matches) return;
 	const match = utils.find(curt.matches, m => m._id === match_id);
 	if (!match) {
 		cerror.silent('Match ' + match_id + ' konnte nicht gefunden werden');
@@ -415,7 +420,7 @@ function ui_scoresheet(match_id) {
 	cbts_utils.esc_stack_push(_cancel_ui_scoresheet);
 
 	uiu.hide_qs('.main');
-	const body = uiu.qs('body');
+	const body = document.querySelector('body');
 	const dialog = uiu.el(body, 'div', {
 		'class': 'match_scoresheet_dialog',
 		'data-match_id': match_id,
@@ -467,7 +472,8 @@ crouting.register(/t\/([a-z0-9]+)\/m\/([-a-zA-Z0-9_ ]+)\/scoresheet$/, function(
 		ui_scoresheet(m[2]);
 	});
 }, change.default_handler(() => {
-	const dlg = uiu.qs('.match_scoresheet_dialog');
+	const dlg = document.querySelector('.match_scoresheet_dialog');
+	if (!dlg) return;
 	const match_id = dlg.getAttribute('data-match_id');
 	ui_scoresheet(match_id);
 }));
@@ -829,10 +835,10 @@ function render_edit(form, match) {
 	// Umpire
 	uiu.el(tos_container, 'span', 'match_label', ci18n('Umpire:'));
 	const umpire_select = uiu.el(tos_container, 'select', {
-		name: 'umpire_name',
+		name: 'umpire_id',
 		size: 1,
 	});
-	render_umpire_options(umpire_select, setup.umpire_name);
+	render_umpire_options(umpire_select, setup.umpire_id || setup.umpire_name);
 
 	// Service judge
 	uiu.el(tos_container, 'span', {
@@ -840,10 +846,10 @@ function render_edit(form, match) {
 		'style': 'margin-left: 1em;',
 	}, ci18n('Service judge:'));
 	const service_judge_select = uiu.el(tos_container, 'select', {
-		name: 'service_judge_name',
+		name: 'service_judge_id',
 		size: 1,
 	});
-	render_umpire_options(service_judge_select, setup.service_judge_name, true);
+	render_umpire_options(service_judge_select, setup.service_judge_id || setup.service_judge_name, true);
 
 	render_override_colors(edit_match_container, setup);
 }
@@ -916,9 +922,9 @@ function render_umpire_options(select, curval, is_service_judge) {
 	}, is_service_judge ? ci18n('No service judge') : ci18n('No umpire'));
 	for (const u of curt.umpires) {
 		const attrs = {
-			value: u.name,
+			value: u._id,
 		};
-		if (u.name === curval) {
+		if (u._id === curval || u.name === curval) {
 			attrs.selected = 'selected';
 		}
 		uiu.el(select, 'option', attrs, u.name);

@@ -216,10 +216,19 @@ function integrate_matches(app, tkey, btp_state, court_map, callback) {
 					return;
 				}
 
+				if (cur_match.line_judges) {
+					match.line_judges = cur_match.line_judges;
+				}
 				app.db.matches.update({_id: cur_match._id}, {$set: match}, {}, (err) => {
 					if (err) return cb(err);
 
-					admin.notify_change(app, match.tournament_key, 'match_edit', {match__id: match._id, setup: match.setup});
+					admin.notify_change(app, match.tournament_key, 'match_edit', {
+						match__id: match._id,
+						setup: match.setup,
+						line_judges: match.line_judges,
+						network_score: match.network_score,
+						team1_won: match.team1_won,
+					});
 					cb();
 				});
 				return;
@@ -253,18 +262,16 @@ function integrate_courts(app, tournament_key, btp_state, callback) {
 		if (m) {
 			num = parseInt(m[1]);
 		}
-		const query = {
-			btp_id,
-			name,
-			num,
-			tournament_key,
-		};
-
-		app.db.courts.findOne(query, (err, cur_court) => {
+		app.db.courts.findOne({tournament_key, btp_id}, (err, cur_court) => {
 			if (err) return cb(err);
 			if (cur_court) {
 				res.set(btp_id, cur_court._id);
-				return cb();
+				if (cur_court.name === name && cur_court.num === num) {
+					return cb();
+				}
+				changed = true;
+				app.db.courts.update({_id: cur_court._id}, {$set: {name, num}}, {}, (err) => cb(err));
+				return;
 			}
 
 			const alt_query = {
@@ -320,26 +327,36 @@ function integrate_umpires(app, tournament_key, btp_state, callback) {
 		}
 		const btp_id = o.ID[0];
 
-		app.db.umpires.findOne({tournament_key, name}, (err, cur) => {
+		app.db.umpires.findOne({tournament_key, btp_id}, (err, cur) => {
 			if (err) return cb(err);
 
 			if (cur) {
-				if (cur.btp_id === btp_id) {
+				if (cur.name === name) {
 					return cb();
-				} else {
-					app.db.umpires.update({tournament_key, name}, {$set: {btp_id}}, {}, (err) => cb(err));
-					return;
 				}
+				changed = true;
+				app.db.umpires.update({_id: cur._id}, {$set: {name}}, {}, (err) => cb(err));
+				return;
 			}
 
-			const u = {
-				_id: tournament_key + '_btp_' + btp_id,
-				btp_id,
-				name,
-				tournament_key,
-			};
-			changed = true;
-			app.db.umpires.insert(u, err => cb(err));
+			app.db.umpires.findOne({tournament_key, name}, (err, cur) => {
+				if (err) return cb(err);
+
+				if (cur) {
+					changed = true;
+					app.db.umpires.update({_id: cur._id}, {$set: {btp_id}}, {}, (err) => cb(err));
+					return;
+				}
+
+				const u = {
+					_id: tournament_key + '_btp_' + btp_id,
+					btp_id,
+					name,
+					tournament_key,
+				};
+				changed = true;
+				app.db.umpires.insert(u, err => cb(err));
+			});
 		});
 	}, err => {
 		if (changed) {
@@ -413,6 +430,10 @@ function fetch(app, tkey, response, callback) {
 		cb => integrate_courts(app, tkey, btp_state, cb),
 		(court_map, cb) => integrate_matches(app, tkey, btp_state, court_map, cb),
 		cb => integrate_now_on_court(app, tkey, cb),
+		cb => {
+			const umpire_assignment = require('./umpire_assignment');
+			umpire_assignment.reassign(app, tkey, cb);
+		},
 	], callback);
 }
 

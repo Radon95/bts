@@ -69,7 +69,7 @@ function send_request(ip, port, xml_req, timeZone, callback) {
 
 
 class BTPConn {
-	constructor(app, ip, password, tkey, enabled_autofetch, readonly, is_team, timeZone) {
+	constructor(app, ip, password, tkey, enabled_autofetch, readonly, sync_intermediate, is_team, timeZone, autofetch_interval) {
 		this.app = app;
 		this.last_status = 'Activated';
 		this.ip = ip;
@@ -79,7 +79,9 @@ class BTPConn {
 		this.terminated = false;
 		this.enabled_autofetch = enabled_autofetch;
 		this.autofetch_timeout = null;
+		this.autofetch_interval = autofetch_interval || 30000;
 		this.readonly = readonly;
+		this.sync_intermediate = sync_intermediate;
 		this.is_team = is_team;
 		this.connect();
 	}
@@ -137,7 +139,7 @@ class BTPConn {
 		this.autofetch_timeout = setTimeout(() => {
 			this.fetch();
 			this.schedule_fetch();
-		}, AUTOFETCH_TIMEOUT);
+		}, this.autofetch_interval);
 	}
 
 	terminate() {
@@ -172,11 +174,6 @@ class BTPConn {
 				}
 
 				for (const m of matches) {
-					if (typeof m.team1_won !== 'boolean') {
-						// serror.silent('match ' + m._id + ' has needsync but is not finished');
-						continue;
-					}
-
 					this.update_score(m);
 				}
 			}
@@ -212,27 +209,39 @@ class BTPConn {
 
 		async.waterfall([
 			(cb) => {
-				if (!match.setup || !match.setup.umpire_name) {
+				if (!match.setup || (!match.setup.umpire_name && !match.setup.umpire_id)) {
 					return cb(null, null, null);
 				}
 
-				this.app.db.umpires.findOne({
-					name: match.setup.umpire_name,
+				const u_query = {
 					tournament_key: this.tkey,
-				}, (err, umpire) => {
+				};
+				if (match.setup.umpire_id) {
+					u_query._id = match.setup.umpire_id;
+				} else {
+					u_query.name = match.setup.umpire_name;
+				}
+
+				this.app.db.umpires.findOne(u_query, (err, umpire) => {
 					if (err) {
 						return cb(err);
 					}
 
 					const umpire_btp_id = umpire ? umpire.btp_id : null;
-					if (!match.setup.service_judge_name) {
+					if (!match.setup.service_judge_name && !match.setup.service_judge_id) {
 						return cb(null, umpire_btp_id, null);
 					}
 
-					this.app.db.umpires.findOne({
-						name: match.setup.service_judge_name,
+					const sj_query = {
 						tournament_key: this.tkey,
-					}, (err, service_judge) => {
+					};
+					if (match.setup.service_judge_id) {
+						sj_query._id = match.setup.service_judge_id;
+					} else {
+						sj_query.name = match.setup.service_judge_name;
+					}
+
+					this.app.db.umpires.findOne(sj_query, (err, service_judge) => {
 						if (err) {
 							return cb(err);
 						}
@@ -275,7 +284,7 @@ class BTPConn {
 			}
 
 			const req = btp_proto.update_request(
-				match, this.key_unicode, this.password, umpire_btp_id, service_judge_btp_id, court_btp_id);
+				match, this.key_unicode, this.password, umpire_btp_id, service_judge_btp_id, court_btp_id, this.sync_intermediate);
 			this.send(req, response => {
 				const results = response.Action[0].Result;
 				const rescode = results ? results[0] : 'no-result';

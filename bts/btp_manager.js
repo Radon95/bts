@@ -22,7 +22,8 @@ function reconfigure(app, t) {
 		app,
 		t.btp_ip, t.btp_password, t.key,
 		t.btp_autofetch_enabled, t.btp_readonly,
-		t.is_team, t.btp_timezone);
+		t.btp_sync_intermediate,
+		t.is_team, t.btp_timezone, t.btp_autofetch_interval);
 	conns_by_tkey.set(t.key, conn);
 }
 
@@ -51,10 +52,6 @@ function update_score(app, match) {
 		return;
 	}
 
-	if (typeof match.team1_won !== 'boolean') {
-		return; // Match not finished yet
-	}
-
 	conn.update_score(match);
 }
 
@@ -63,6 +60,14 @@ function init(app, cb) {
 		if (err) return cb(err);
 
 		for (const t of tournaments) {
+			t.btp_autofetch_interval = 30000;
+			t.umpire_tracking_enabled = false;
+			app.db.tournaments.update({_id: t._id}, {$set: {
+				btp_autofetch_interval: 30000,
+				umpire_tracking_enabled: false,
+			}}, (err) => {
+				if (err) serror.silent('Failed to reset tournament properties on startup: ' + err.message);
+			});
 			reconfigure(app, t);
 		}
 		cb();

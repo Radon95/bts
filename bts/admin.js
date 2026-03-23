@@ -7,6 +7,7 @@ const uuidv4 = require('uuid/v4');
 const {promisify} = require('util');
 
 const btp_manager = require('./btp_manager');
+const umpire_assignment = require('./umpire_assignment');
 const serror = require('./serror');
 const stournament = require('./stournament');
 const ticker_manager = require('./ticker_manager');
@@ -52,12 +53,19 @@ function handle_tournament_edit_props(app, ws, msg) {
 	const key = msg.key;
 	const props = utils.pluck(msg.props, [
 		'name',
-		'btp_enabled', 'btp_autofetch_enabled', 'btp_readonly',
-		'btp_ip', 'btp_password',
+		'btp_enabled', 'btp_autofetch_enabled', 'btp_autofetch_interval', 'btp_readonly', 'btp_sync_intermediate',
+		'btp_ip', 'btp_password', 'btp_timezone',
 		'is_team', 'is_nation_competition', 'only_now_on_court', 'counting',
 		'ticker_enabled', 'ticker_url', 'ticker_password',
 		'language', 'dm_style',
-		'logo_background_color', 'logo_foreground_color']);
+		'logo_background_color', 'logo_foreground_color',
+		'umpire_tracking_enabled', 'umpire_assignment_enabled', 'service_judge_assignment_enabled', 'line_judge_assignment_enabled',
+		'umpire_assignment_upcoming_penalty_1_threshold', 'umpire_assignment_upcoming_penalty_1_multiplier',
+		'umpire_assignment_upcoming_penalty_2_threshold', 'umpire_assignment_upcoming_penalty_2_multiplier',
+		'umpire_manage_call_match_enabled', 'umpire_manage_call_match_optional_sj', 'umpire_manage_call_match_optional_lj',
+		'umpire_manage_call_match_corner', 'umpire_manage_call_match_lifetime', 'umpire_manage_call_match_exact_words',
+		'umpire_manage_call_match_language',
+	]);
 
 	if (msg.props.btp_timezone) {
 		props.btp_timezone = msg.props.btp_timezone === 'system' ? undefined : msg.props.btp_timezone;
@@ -156,6 +164,16 @@ function handle_create_tournament(app, ws, msg) {
 	const t = {
 		key: msg.key,
 		only_now_on_court: true,
+		btp_enabled: false,
+		btp_autofetch_enabled: false,
+		btp_autofetch_interval: 30000,
+		btp_readonly: false,
+		btp_sync_intermediate: false,
+		ticker_enabled: false,
+		umpire_tracking_enabled: false,
+		umpire_assignment_enabled: false,
+		service_judge_assignment_enabled: false,
+		line_judge_assignment_enabled: false,
 	};
 
 	app.db.tournaments.insert(t, function(err) {
@@ -171,7 +189,9 @@ function _extract_setup(msg_setup) {
 		'match_num',
 		'now_on_court',
 		'umpire_name',
+		'umpire_id',
 		'service_judge_name',
+		'service_judge_id',
 		'is_doubles',
 		'incomplete',
 		'scheduled_time_str',
@@ -207,7 +227,77 @@ function handle_match_add(app, ws, msg) {
 			return;
 		}
 		notify_change(app, tournament_key, 'match_add', {match: inserted_m});
+		umpire_assignment.reassign(app, tournament_key);
 		ws.respond(msg, err);
+	});
+}
+
+function handle_umpire_edit_props(app, ws, msg) {
+	if (!_require_msg(ws, msg, ['tournament_key', 'id', 'props'])) {
+		return;
+	}
+
+	const props = utils.pluck(msg.props, [
+		'status', 'weight', 'paused_since_ts',
+	]);
+
+	app.db.umpires.update({_id: msg.id, tournament_key: msg.tournament_key}, {$set: props}, {returnUpdatedDocs: true}, function(err, num, u) {
+		if (err) {
+			ws.respond(msg, err);
+			return;
+		}
+		notify_change(app, msg.tournament_key, 'umpire_edit', u);
+		umpire_assignment.reassign(app, msg.tournament_key);
+		ws.respond(msg, err);
+	});
+}
+
+function handle_umpire_assignment_get(app, ws, msg) {
+	if (!_require_msg(ws, msg, ['tournament_key'])) {
+		return;
+	}
+
+	umpire_assignment.get_umpires_with_stats(app, msg.tournament_key, (err, umpires) => {
+		ws.respond(msg, err, {umpires});
+	});
+}
+
+function handle_umpire_recalculate(app, ws, msg) {
+	if (!_require_msg(ws, msg, ['tournament_key'])) {
+		return;
+	}
+
+	umpire_assignment.get_umpires_with_stats(app, msg.tournament_key, (err, umpires) => {
+		if (err) return ws.respond(msg, err);
+
+		async.each(umpires, (u, cb) => {
+			const update = {
+				total_matches_all: u.total_matches_all,
+				total_matches_today: u.total_matches_today,
+				last_match_end_ts: u.last_match_end_ts,
+				last_role: u.last_role,
+			};
+			app.db.umpires.update({_id: u._id}, {$set: update}, {}, cb);
+		}, (err) => {
+			if (!err) {
+				notify_change(app, msg.tournament_key, 'umpires_changed', {all_umpires: umpires});
+			}
+			ws.respond(msg, err, {umpires});
+		});
+	});
+}
+
+function handle_match_set_line_judges(app, ws, msg) {
+	if (!_require_msg(ws, msg, ['tournament_key', 'match_id', 'line_judges'])) {
+		return;
+	}
+
+	app.db.matches.update({_id: msg.match_id, tournament_key: msg.tournament_key}, {$set: {line_judges: msg.line_judges}}, {returnUpdatedDocs: true}, (err, num, match) => {
+		if (err) return ws.respond(msg, err);
+		if (num !== 1) return ws.respond(msg, new Error('Match not found'));
+
+		notify_change(app, msg.tournament_key, 'match_edit', {match__id: msg.match_id, setup: match.setup, line_judges: match.line_judges});
+		ws.respond(msg);
 	});
 }
 
@@ -218,7 +308,14 @@ function handle_match_edit(app, ws, msg) {
 	const tournament_key = msg.tournament_key;
 	const setup = _extract_setup(msg.setup);
 	// TODO get old setup, make sure no key has been removed
-	app.db.matches.update({_id: msg.id, tournament_key}, {$set: {setup}}, {returnUpdatedDocs: true}, function(err, numAffected, changed_match) {
+	const update = {$set: {setup}};
+	if (msg.line_judges) {
+		update.$set.line_judges = msg.line_judges;
+	}
+	if (msg.btp_update) {
+		update.$set.btp_needsync = true;
+	}
+	app.db.matches.update({_id: msg.id, tournament_key}, update, {returnUpdatedDocs: true}, function(err, numAffected, changed_match) {
 		if (err) {
 			ws.respond(msg, err);
 			return;
@@ -234,10 +331,11 @@ function handle_match_edit(app, ws, msg) {
 			return;
 		}
 
-		notify_change(app, tournament_key, 'match_edit', {match__id: msg.id, setup});
+		notify_change(app, tournament_key, 'match_edit', {match__id: msg.id, setup, line_judges: changed_match.line_judges});
 		if (msg.btp_update) {
 			btp_manager.update_score(app, changed_match);
 		}
+		umpire_assignment.reassign(app, tournament_key);
 		ws.respond(msg, err);
 	});
 }
@@ -391,6 +489,10 @@ module.exports = {
 	handle_courts_add,
 	handle_match_add,
 	handle_match_edit,
+	handle_match_set_line_judges,
+	handle_umpire_edit_props,
+	handle_umpire_assignment_get,
+	handle_umpire_recalculate,
 	handle_ticker_pushall,
 	handle_ticker_reset,
 	handle_tournament_get,
